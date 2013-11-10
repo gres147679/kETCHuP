@@ -1,0 +1,25 @@
+Estructuras:
+	-Lista/cola
+	-Tabla de hash
+	-Sala	
+	-Usuario
+
+Modulo servidor:
+	-startListening
+	-listUsers
+	-listChatrooms -> Tabla de hash
+	-createChatroom -> struct con lista de usuarios y owner(ip)
+	-deleteChatroom
+	-sendMessage
+	-subscribeUser
+	-desubscribeUser
+
+Modulo cliente:
+	-startTransmitting
+	-listUsers
+	-listChatrooms -> Tabla de hash
+	-createChatroom -> struct con lista de usuarios y owner(ip)
+	-deleteChatroom
+	-sendMessage
+	-subscribeUser
+	-desubscribeUser
