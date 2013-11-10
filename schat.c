@@ -6,7 +6,8 @@
  
  Septiembre - Diciembre 2013
  ****************************/
- 
+#include <ctype.h>
+#include <unistd.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/types.h>
@@ -114,6 +115,42 @@ void waitForConnections(int serverSocketFD){
 
 
 main(int argc, char *argv[]){
+
+  int index;
+  int flag;
+
+  // Variables de ejecución del cliente, que se setean según CLI
+  int port;
+  char chatRoom[100] = "default";
+
+
+  opterr = 0;
+
+  while ((flag = getopt (argc, argv, "s:p:")) != -1)
+   switch (flag){
+     case 's':
+       strcpy(chatRoom,optarg);
+       break;
+     case 'p':
+       port = atoi(optarg);
+       break;
+     case '?':
+       if (optopt == 's' || optopt == 'p')
+         fprintf (stderr, "La opción -%c requiere un argumento.\n", optopt);
+       else if (isprint(optopt))
+         fprintf (stderr, "Opción inválida `-%c'.\n", optopt);
+       else
+         fprintf (stderr,
+                  "Opción inválida `\\x%x'.\n",
+                  optopt);
+       return 1;
+     default:
+       abort ();
+   }
+
+  for (index = optind; index < argc; index++)
+   printf ("No es una opción: %s\n", argv[index]);
+
   int serverSocketFD = initializeServer(PORT,QUEUELENGTH);
   waitForConnections(serverSocketFD);
   return 0;
