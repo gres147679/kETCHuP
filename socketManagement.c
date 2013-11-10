@@ -15,26 +15,27 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include "socketManagement.h"
+ #include "errors.h"
 
-void printError(char *message) {
-  perror(message);
-  exit(1);
-}
-
-void copyData(int from, int to) {
+void copyDataToFD(int from, int to) {
   char buf[1024];
   int amount;
 
  
   while ((amount = read(from, buf, sizeof(buf))) > 0){
     if (write(to, buf, amount) != amount) {
-      printError("write");
+      fatalError("Socket write failed");
       return;
     }
   }
   
-  if (amount < 0) printError("read");
+  if (amount < 0) fatalError("Socket write failed");
 
+}
 
+void copyDataToArray(int from, char *to) {
+  int amount;
+  while ((amount = read(from, to, 170*sizeof(char))) > 0);
+  return;
 
 }

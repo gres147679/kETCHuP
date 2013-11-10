@@ -11,6 +11,4 @@
  Septiembre - Diciembre 2013
  ****************************/
 
-void printError(char *);
-
-void copyData(int, int);
+void copyDataToFD(int, int);
