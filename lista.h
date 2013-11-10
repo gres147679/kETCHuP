@@ -28,7 +28,7 @@ void initialize(listaUsuarios *lista){
     lista->size = 0;
 }
 
-void adduser(listaUsuarios *lista,char *nombreUsuario){
+void addUser(listaUsuarios *lista,char *nombreUsuario){
     // Creamos la nueva caja de la lista
     usuarios *newu;
     newu = (usuarios *) malloc (sizeof(usuarios));
@@ -55,33 +55,21 @@ void adduser(listaUsuarios *lista,char *nombreUsuario){
     ++lista->size;
 }
 
-/*
-void removeuser(char *username){
+void removeUser(char *username){
     usuarios *act;
     act = cabeza;
-    while (*act != NULL){
-        if (*act->username==*username) break;
+    
+    if (*act->username = username){
+        cabeza = *cabeza->sig;
+    }else{
+        while (*act->sig != NULL){
+            if (*(*act->sig)->username==username) break;
             act = act->sig;
         }
 
-        if (*act!=NULL){
-
+        if (*act->sig!=NULL){
+            act->sig = *(act->sig)->sig;
         }
     }
-
-}*/
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    
+}
