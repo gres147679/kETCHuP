@@ -54,18 +54,24 @@ void addUser(listaUsuarios *lista,char *nombreUsuario){
 
     // Incremento el tamaño de la lista
     ++lista->size;
+    printf("La cabeza ahora es %s\n",lista->cabeza->username);
+    printf("La cola ahora es %s\n",lista->cola->username);
 }
 
 void removeUser(listaUsuarios *lista, char *username){
     usuarios *act;
     act = lista->cabeza;
+    printf("%s\n",act->username);
+    printf("%s\n",username);
     
-    if (*act->username = username){
+    if (strcmp(act->username,username) == 0){
+
+        printf("balsada"); 
         lista->cabeza = lista->cabeza->sig;
     }else{
         while (act->sig != NULL){
             char *usernameSiguiente = act->sig->username;
-            if ( strcmp(usernameSiguiente,username) ) break;
+            if ( strcmp(usernameSiguiente,username)==0 ) break;
             act = act->sig;
         }
 
@@ -76,7 +82,7 @@ void removeUser(listaUsuarios *lista, char *username){
 }
 
 
-void printLista(listaUsuarios lista){
+void printList(listaUsuarios lista){
     //creo un elemento tmp para iterar
     usuarios *tmp;
     tmp = (usuarios *) malloc (sizeof(usuarios));
