@@ -15,8 +15,8 @@ all : sclient cclient
 errors.o : errors.c errors.h
 	$(CC) $(CFLAGS) -c errors.c
 
-socketManagement.o : socketManagement.c socketManagement.h
-	$(CC) $(CFLAGS) -c socketManagement.c	
+socketManagement.o : errors.o socketManagement.c socketManagement.h
+	$(CC) $(CFLAGS) -c socketManagement.c errors.o
 
 sclient : schat.c socketManagement.o errors.o 
 	$(CC) $(CFLAGS) -o schat schat.c errors.o socketManagement.o $(LIBS)
