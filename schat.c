@@ -11,11 +11,13 @@
 #include <stdlib.h>
 #include <sys/types.h>
 #include <sys/socket.h>
-// AQUI VAN OTROS INCLUDE, NO ESTOY SEGURA CUALES
+#include <netinet/in.h>
 #include <strings.h>
 #include "errors.h"
+#include "sockutil.h"
 
-#define port 20226
+#define PORT 20226
+#define QUEUELENGTH 10
 
 main(int argc, char *argv[]){
   int sockfd, newsockfd;  
@@ -46,7 +48,10 @@ main(int argc, char *argv[]){
     newsockfd = accept(sockfd, 
                        (struct sockaddr *) &clientaddr,
                        &clientaddrlength);
-  /* IMPLEMENTACION LOCA =) */
+    while (1){
+      copyData(newsockfd,1); 
+    }
+    
   }
   
 }
