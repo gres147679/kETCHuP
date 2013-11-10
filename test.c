@@ -3,9 +3,10 @@
 int main(){
 	listaUsuarios blah;
 	initialize(&blah);
-	adduser(&blah,"Jajaj");
-	adduser(&blah,"Jajaj");
-	adduser(&blah,"Jajaj");
-	adduser(&blah,"Jajaj");
+	addUser(&blah,"Jajaj");
+	addUser(&blah,"Jajaj");
+	addUser(&blah,"Jajaj");
+	addUser(&blah,"Jajaj");
+	printLista(blah);
 	return 0;	
 }
