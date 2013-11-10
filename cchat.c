@@ -35,10 +35,10 @@ void copy(int sockfd) {
     /* Write a character to the socket. */
     outbuffer = c;
     if (write(sockfd, &outbuffer, 1) != 1)
-      fatalerror("can't write to socket");
+      fatalError("can't write to socket");
     // /* Read the response and print it. */
     // if (read(sockfd, &inbuffer, 1) != 1)
-    //   fatalerror("can't read from socket");
+    //   fatalError("can't read from socket");
     // putchar(inbuffer);
   }
 }
@@ -66,12 +66,12 @@ main(int argc, char *argv[]) {
   /* Open a socket. */
   sockfd = socket(AF_INET, SOCK_STREAM, 0);
   if (sockfd < 0)
-    fatalerror("can't open socket");
+    fatalError("can't open socket");
 
   /* Connect to the server. */
   if (connect(sockfd, (struct sockaddr *) &serveraddr,
               sizeof(serveraddr)) < 0)
-    fatalerror("can't connect to server");
+    fatalError("can't connect to server");
 
   /* Copy input to the server. */
   copy(sockfd);
