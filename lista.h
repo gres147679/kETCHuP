@@ -72,6 +72,20 @@ void removeUser(char *username){
     
 }
 
+void printLista(){
+    //creo un elemento tmp para iterar
+    usuarios *tmp;
+    tmp = (usuarios *) malloc (sizeof(usuarios));
+    if (tmp==NULL)
+        perror("malloc");
+    
+    tmp = cabeza;
+    while (*act != NULL){
+        printf("Usuario: " + *act->username + "\n");
+        act = *act->sig;
+    }
+}
+
 
 
 
