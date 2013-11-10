@@ -22,13 +22,13 @@ typedef struct{
     usuarios *cola;
 } listaUsuarios;
 
-void initialize(listaUsuarios lista){
-    lista.cabeza = NULL;
-    lista.cola = NULL;
-    lista.size = 0;
+void initialize(listaUsuarios *lista){
+    lista->cabeza = NULL;
+    lista->cola = NULL;
+    lista->size = 0;
 }
 
-void adduser(listaUsuarios lista,char *nombreUsuario){
+void adduser(listaUsuarios *lista,char *nombreUsuario){
     // Creamos la nueva caja de la lista
     usuarios *newu;
     newu = (usuarios *) malloc (sizeof(usuarios));
@@ -40,17 +40,19 @@ void adduser(listaUsuarios lista,char *nombreUsuario){
     newu->sig = NULL;
 
     // Si la lista está vacía
-    if (lista.size==0){
-        lista.cabeza=newu;
-        lista.cola=newu;
+    if (lista->size==0){
+        lista->cabeza=newu;
+        lista->cola=newu;
+        printf("hola\n");
     }
     else{
-        lista.cola->sig = newu;
-        lista.cola = newu;
+        lista->cola->sig = newu;
+        lista->cola = newu;
+        printf("chao\n");
     }
 
     // Incremento el tamaño de la lista
-    ++lista.size;
+    ++lista->size;
 }
 
 /*
