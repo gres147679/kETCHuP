@@ -3,8 +3,8 @@
 
 extern char *programname;
 
-extern void fatalerror(char *message);
-extern void errormessage(char *message);
+extern void fatalError(char *message);
+extern void errorMessage(char *message);
 
 #endif
 

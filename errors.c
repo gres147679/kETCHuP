@@ -4,14 +4,14 @@
 
 char *programname;
 
-void fatalerror(char *message) {
+void fatalError(char *message) {
   fprintf(stderr, "%s: %s\n", programname, message);
   perror(programname);
   fflush(stdout);
   exit(1);
 }
 
-void errormessage(char *message) {
+void errorMessage(char *message) {
   fprintf(stderr, "%s: %s\n", programname, message);
   fflush(stdout);
 }
