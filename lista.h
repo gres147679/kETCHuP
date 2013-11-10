@@ -10,13 +10,14 @@ Lista enlazada simple de usuarios
  
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
-typedef struct{
+typedef struct usuarios{
     char *username;
     struct usuarios *sig;
 } usuarios; 
 
-typedef struct{
+typedef struct listaUsuarios{
     int size;
     usuarios *cabeza;
     usuarios *cola;
@@ -55,51 +56,36 @@ void addUser(listaUsuarios *lista,char *nombreUsuario){
     ++lista->size;
 }
 
-void removeUser(char *username){
+void removeUser(listaUsuarios *lista, char *username){
     usuarios *act;
-    act = cabeza;
+    act = lista->cabeza;
     
     if (*act->username = username){
-        cabeza = *cabeza->sig;
+        lista->cabeza = lista->cabeza->sig;
     }else{
-        while (*act->sig != NULL){
-            if (*(*act->sig)->username==username) break;
+        while (act->sig != NULL){
+            char *usernameSiguiente = act->sig->username;
+            if ( strcmp(usernameSiguiente,username) ) break;
             act = act->sig;
         }
 
-        if (*act->sig!=NULL){
-            act->sig = *(act->sig)->sig;
+        if (act->sig != NULL){
+            act->sig = act->sig->sig;
         }
     }
 }
 
-void printLista(){
+
+void printLista(listaUsuarios lista){
     //creo un elemento tmp para iterar
     usuarios *tmp;
     tmp = (usuarios *) malloc (sizeof(usuarios));
     if (tmp==NULL)
         perror("malloc");
     
-    tmp = cabeza;
-    while (*act != NULL){
-        printf("Usuario: " + *act->username + "\n");
-        act = *act->sig;
+    tmp = lista.cabeza;
+    while (tmp != NULL){
+        printf("Usuario: %s \n",tmp->username);
+        tmp = tmp->sig;
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
->>>>>>> 50e56508471c3baa1248990389a689353e265608
