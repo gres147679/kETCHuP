@@ -50,7 +50,9 @@ void serveClient(struct sockaddr_in clientAddress,int newClientSocketFD){
   char command[4];
   command[3]='\0';
 
-  copyDataToArray(newClientSocketFD,&buffer); 
+  puts("blah1");
+  copyDataToFD(newClientSocketFD,1); 
+  puts("blah");
   strncpy(command,buffer,3);
 
   // Definición de los comandos
@@ -102,7 +104,7 @@ void waitForConnections(int serverSocketFD){
                        (struct sockaddr *) &clientAddress,
                        &clientAddresslength) == -1)
       fatalError("No se pueden aceptar conexiones");
-
+    puts("Se conecto alguien;");
     serveClient(clientAddress,newClientSocketFD);
   }
 }
@@ -152,6 +154,8 @@ main(int argc, char *argv[]){
    printf ("No es una opción: %s\n", argv[index]);
 
   int serverSocketFD = initializeServer(PORT,QUEUELENGTH);
+
   waitForConnections(serverSocketFD);
+  puts("Holla;");
   return 0;
 }

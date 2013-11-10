@@ -12,3 +12,5 @@
  ****************************/
 
 void copyDataToFD(int, int);
+
+void copyDataToArray(int from, char *to) ;

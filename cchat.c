@@ -24,6 +24,7 @@ Copyright (C) 1995 by Fred Sullivan      All Rights Reserved
 #include <netinet/in.h>
 #include <string.h>
 #include "errors.h"
+#include "socketManagement.h"
 
 #define PORT 20226
 
@@ -45,40 +46,7 @@ void copy(int sockfd) {
 }
 
 // main(int argc, char *argv[]) {
-  // int sockfd;
-  // struct sockaddr_in serveraddr;
-  // char *server;
-
-  // /* Remember the program name for error messages. */
-  // programname = argv[0];
-
-  // /* Who's the server? */
-  // if (argc == 2)
-  //   server = argv[1];
-  // else
-  //   server = "127.0.0.1";
-
-  // /* Get the address of the server. */
-  // bzero(&serveraddr, sizeof(serveraddr));
-  // serveraddr.sin_family = AF_INET;
-  // serveraddr.sin_addr.s_addr = inet_addr(server);
-  // serveraddr.sin_port = htons(PORT);
-
-  // /* Open a socket. */
-  // sockfd = socket(AF_INET, SOCK_STREAM, 0);
-  // if (sockfd < 0)
-  //   fatalError("can't open socket");
-
-  // /* Connect to the server. */
-  // if (connect(sockfd, (struct sockaddr *) &serveraddr,
-  //             sizeof(serveraddr)) < 0)
-  //   fatalError("can't connect to server");
-
-  // /* Copy input to the server. */
-  // copy(sockfd);
-  // close(sockfd);
-
-  // exit(EXIT_SUCCESS);
+  
 //}
 
 int main (int argc, char **argv){
@@ -86,7 +54,7 @@ int main (int argc, char **argv){
   int flag;
 
   // Variables de ejecución del cliente, que se setean según CLI
-  char host[16] = "blah";
+  char host[16] = "127.0.0.1";
   int port;
 
   // Se genera un username random por defecto
@@ -132,5 +100,35 @@ int main (int argc, char **argv){
      }
 
   for (index = optind; index < argc; index++)
-   printf ("No es una opción: %s\n", argv[index]);
+  printf ("No es una opción: %s\n", argv[index]);
+  
+  int clientSocketFD;
+  struct sockaddr_in serverAddress;
+
+  /* Remember the program name for error messages. */
+  programname = argv[0];
+
+  /* Get the address of the server. */
+  bzero(&serverAddress, sizeof(serverAddress));
+  serverAddress.sin_family = AF_INET;
+  serverAddress.sin_addr.s_addr = inet_addr(host);
+  serverAddress.sin_port = htons(PORT);
+
+  /* Open a socket. */
+  clientSocketFD = socket(AF_INET, SOCK_STREAM, 0);
+  if (clientSocketFD < 0)
+    fatalError("can't open socket");
+
+  /* Connect to the server. */
+  if (connect(clientSocketFD, (struct sockaddr *) &serverAddress,
+              sizeof(serverAddress)) < 0)
+    fatalError("can't connect to server");
+
+  /* Copy input to the server. */
+  puts("Blah");
+  copyDataToFD(0,clientSocketFD);
+  close(clientSocketFD);
+
+  exit(EXIT_SUCCESS);
+
 }

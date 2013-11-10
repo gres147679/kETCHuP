@@ -18,18 +18,19 @@
  #include "errors.h"
 
 void copyDataToFD(int from, int to) {
-  char buf[1024];
+  char buffer[1024];
   int amount;
 
- 
-  while ((amount = read(from, buf, sizeof(buf))) > 0){
-    if (write(to, buf, amount) != amount) {
-      fatalError("Socket write failed");
+  puts("testing before");
+  while ((amount = read(from, buffer, sizeof(buffer))) > 0){
+    puts("testing");
+    if (write(to, buffer, amount) != amount) {
+      fatalError("Falló la escritura al socket");
       return;
     }
   }
   
-  if (amount < 0) fatalError("Socket write failed");
+  if (amount < 0) fatalError("Falló la escritura al socket");
 
 }
 
