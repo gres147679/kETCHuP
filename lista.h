@@ -11,29 +11,46 @@ Lista enlazada simple de usuarios
 #include <stdio.h>
 #include <stdlib.h>
 
-struct usuarios{
+typedef struct{
     char *username;
-    usuarios *sig;
+    struct usuarios *sig;
+} usuarios; 
+
+typedef struct{
+    int size;
+    usuarios *cabeza;
+    usuarios *cola;
+} listaUsuarios;
+
+void initialize(listaUsuarios lista){
+    lista.cabeza = NULL;
+    lista.cola = NULL;
+    lista.size = 0;
 }
 
-struct usuarios *cabeza, *cola;
-
-void adduser(char *newuser){
-    struct usuarios *newu;
-    newu = (struct usuarios *) malloc (sizeof(struct usuarios));
+void adduser(listaUsuarios lista,char *nombreUsuario){
+    // Creamos la nueva caja de la lista
+    usuarios *newu;
+    newu = (usuarios *) malloc (sizeof(usuarios));
     if (newu==NULL) 
       perror("malloc");
 
-    newu->username = newuser;
+    // Rellenamos la caja
+    newu->username = nombreUsuario;
     newu->sig = NULL;
 
-    if (cabeza==NULL){
-        cabeza=newu;
-        cola=newu;
-    }else{
-        cola->sig = newu;
-        cola = newu;
+    // Si la lista está vacía
+    if (lista.size==0){
+        lista.cabeza=newu;
+        lista.cola=newu;
     }
+    else{
+        lista.cola->sig = newu;
+        lista.cola = newu;
+    }
+
+    // Incremento el tamaño de la lista
+    ++lista.size;
 }
 
 /*
