@@ -14,7 +14,7 @@
 #include <netinet/in.h>
 #include <strings.h>
 #include "errors.h"
-#include "sockutil.h"
+#include "socketManagement.h"
 
 #define PORT 20226
 #define QUEUELENGTH 10
