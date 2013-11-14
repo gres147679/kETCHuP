@@ -15,13 +15,13 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include "socketManagement.h"
- #include "errors.h"
+#include "errors.h"
 
 void copyDataToFD(int from, int to) {
   char buffer[1024];
   int amount;
 
-  puts("testing before");
+  puts("testing before, jojojo");
   while ((amount = read(from, buffer, sizeof(buffer))) > 0){
     puts("testing");
     if (write(to, buffer, amount) != amount) {

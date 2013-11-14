@@ -6,6 +6,7 @@
  
  Septiembre - Diciembre 2013
  ****************************/
+#include <arpa/inet.h>
 #include <ctype.h>
 #include <unistd.h>
 #include <stdio.h>
@@ -18,7 +19,7 @@
 #include "socketManagement.h"
 
 #define PORT 20226
-#define QUEUELENGTH 10
+#define QUEUELENGTH 5
 
 int initializeServer(int serverPort,int serverQueueLength){
   int serverSocketFD, newClientSocketFD;  
@@ -30,17 +31,6 @@ int initializeServer(int serverPort,int serverQueueLength){
   serverSocketFD = socket(PF_INET, SOCK_STREAM,0);
   if (serverSocketFD < 0)
     fatalError("No se puede abrir el socket");
-  
-  /*Asociar el socket a una direccion*/
-  bzero(&serverAddress, sizeof(serverAddress));
-  serverAddress.sin_family = PF_INET;
-  serverAddress.sin_addr.s_addr = htonl(INADDR_ANY);
-  serverAddress.sin_port = htons(serverPort);
-  if (bind(serverSocketFD, (struct sockaddr *) &serverAddress,
-           sizeof(serverAddress)) != 0)
-    fatalError("No se puede asociar a un socket");
-  if (listen(serverSocketFD, serverQueueLength) < 0)
-    fatalError("No se puede escuchar");
 
   return serverSocketFD;
 }
@@ -92,17 +82,48 @@ void serveClient(struct sockaddr_in clientAddress,int newClientSocketFD){
 }
 
 void waitForConnections(int serverSocketFD){
-  struct sockaddr_in clientAddress;
-  int clientAddresslength;
+  struct sockaddr_in serverAddress;
+  int serverAddresslength;
   int newClientSocketFD;
-
-  /*Servidor*/
   
-    while((newClientSocketFD = accept(serverSocketFD, (struct sockaddr *) &clientAddress, &clientAddresslength)) >= 0) {
-            serveClient(clientAddress,newClientSocketFD);
-            printf("...Done\n");
-            close(newClientSocketFD);
-    }
+  /*Asociar el socket a una direccion*/
+  
+  int i = 1,conn;
+  setsockopt(serverSocketFD,SOL_SOCKET, SO_REUSEADDR, &i, sizeof(i));
+  
+  //bzero(&serverAddress, sizeof(serverAddress));
+  serverAddress.sin_family = AF_INET;
+  //serverAddress.sin_addr.s_addr = htonl(INADDR_ANY);
+  serverAddress.sin_port = htons(PORT);
+  memset(&serverAddress.sin_addr, 0, sizeof(serverAddress.sin_addr));
+  if (bind(serverSocketFD, (struct sockaddr *) &serverAddress,
+           sizeof(serverAddress)) != 0)
+    fatalError("No se puede asociar a un socket");
+  if (listen(serverSocketFD, QUEUELENGTH) < 0)
+    fatalError("No se puede escuchar");
+
+  /*Servidor
+  while (1) {
+    /* Wait for a connection. 
+    serverAddresslength = sizeof(struct sockaddr_in);
+    if (newClientSocketFD = accept(serverSocketFD, 
+                       (struct sockaddr *) &serverAddress,
+                       &serverAddresslength) < 0)
+      fatalError("No se pueden aceptar conexiones");
+    puts("Se conecto alguien;");
+    printf("le fd del cliente es: %d, socket = %d\n",newClientSocketFD, serverSocketFD);
+    copyDataToFD(newClientSocketFD,1); 
+    serveClient(serverAddress,newClientSocketFD);
+    close(newClientSocketFD);
+  }*/
+      while((newClientSocketFD = accept(serverSocketFD, (struct sockaddr *) &serverAddress, &serverAddresslength)) >= 0) {
+                printf("conn = %d. sock = %d\n", newClientSocketFD, serverSocketFD);
+                printf("...getting data\n");
+                copyDataToFD(newClientSocketFD,1);
+                //serveClient(address,conn);
+                printf("...Done\n");
+                close(newClientSocketFD);
+     }
 }
 
 

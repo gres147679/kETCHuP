@@ -7,7 +7,7 @@
 
 CC = gcc
 CFLAGS = -g -L /usr/lib/happycoders
-LIBS = -lsocket -lnsl
+LIBS = -lnsl
 
 
 all : sclient cclient 
@@ -24,3 +24,5 @@ sclient : schat.c socketManagement.o errors.o
 cclient : cchat.c errors.o
 	$(CC) $(CFLAGS) -o cchat cchat.c errors.o socketManagement.o $(LIBS)
 
+clean:
+	rm *.o schat cchat
