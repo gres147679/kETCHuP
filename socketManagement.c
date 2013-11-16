@@ -21,9 +21,7 @@ void copyDataToFD(int from, int to) {
   char buffer[1024];
   int amount;
 
-  puts("testing before, jojojo");
   while ((amount = read(from, buffer, sizeof(buffer))) > 0){
-    puts("testing");
     if (write(to, buffer, amount) != amount) {
       fatalError("Falló la escritura al socket");
       return;

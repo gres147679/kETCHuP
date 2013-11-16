@@ -38,16 +38,12 @@ void copy(int sockfd) {
     outbuffer = c;
     if (write(sockfd, &outbuffer, 1) != 1)
       fatalError("can't write to socket");
-    // /* Read the response and print it. */
-    // if (read(sockfd, &inbuffer, 1) != 1)
-    //   fatalError("can't read from socket");
-    // putchar(inbuffer);
+    /* Read the response and print it. */
+    if (read(sockfd, &inbuffer, 1) != 1)
+      fatalError("can't read from socket");
+    putchar(inbuffer);
   }
 }
-
-// main(int argc, char *argv[]) {
-  
-//}
 
 int main (int argc, char **argv){
   int index;

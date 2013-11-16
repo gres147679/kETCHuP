@@ -16,9 +16,12 @@
 #include <string.h>
 #include "errors.h"
 #include "socketManagement.h"
+#include "lista.h"
 
 #define PORT 20226
 #define QUEUELENGTH 10
+
+listaUsuarios users;
 
 int initializeServer(int serverPort,int serverQueueLength){
   int serverSocketFD, newClientSocketFD;  
@@ -50,9 +53,7 @@ void serveClient(struct sockaddr_in clientAddress,int newClientSocketFD){
   char command[4];
   command[3]='\0';
 
-  puts("blah1");
-  copyDataToFD(newClientSocketFD,1); 
-  puts("blah");
+  int n = read(newClientSocketFD,buffer,169); 
   strncpy(command,buffer,3);
 
   // Definición de los comandos
@@ -62,31 +63,32 @@ void serveClient(struct sockaddr_in clientAddress,int newClientSocketFD){
   }
   else if ( strcmp(command,"usu") == 0 ){
     printf("Mandaste usu\n");
-    //Llamada a implementación de sal
+    //Llamada a implementación de usu
   }
   else if ( strcmp(command,"men") == 0 ){
     printf("Mandaste men\n");
-    //Llamada a implementación de sal
+    //Llamada a implementación de usu
   }
   else if ( strcmp(command,"sus") == 0 ){
     printf("Mandaste sus\n");
-    //Llamada a implementación de sal
+    //Llamada a implementación de sus
   }
   else if ( strcmp(command,"des") == 0 ){
     printf("Mandaste des\n");
-    //Llamada a implementación de sal
+    //Llamada a implementación de des
   }
   else if ( strcmp(command,"cre") == 0 ){
     printf("Mandaste cre\n");
-    //Llamada a implementación de sal
+    //Llamada a implementación de cre
   }
   else if ( strcmp(command,"eli") == 0 ){
     printf("Mandaste eli\n");
-    //Llamada a implementación de sal
+    //Llamada a implementación de eli
   }
   else if ( strcmp(command,"fue") == 0 ){
     printf("Mandaste fue\n");
-    //Llamada a implementación de sal
+  }else{
+    printf("Comando erroneo\n");
   }
   return;
 }
@@ -95,22 +97,20 @@ void waitForConnections(int serverSocketFD){
   struct sockaddr_in clientAddress;
   int clientAddresslength;
   int newClientSocketFD;
+  char user [20];
 
   /*Servidor*/
   
     while((newClientSocketFD = accept(serverSocketFD, (struct sockaddr *) &clientAddress, &clientAddresslength)) >= 0) {
+        //Se agrega el usuario a la lista de usuarios del chat
+        snprintf(user, sizeof(user), "%i", newClientSocketFD);
+        addUser(&users, user);
+        while(1)    
             serveClient(clientAddress,newClientSocketFD);
-            printf("...Done\n");
-            close(newClientSocketFD);
+        printf("...Done\n");
+        close(newClientSocketFD);
     }
 }
-
-
-
-  // while (1){
-  //     copyData(newClientFD,1); 
-  //   }
-
 
 main(int argc, char *argv[]){
 
@@ -148,10 +148,10 @@ main(int argc, char *argv[]){
 
   for (index = optind; index < argc; index++)
    printf ("No es una opción: %s\n", argv[index]);
-
+  
+  initialize(&users);
   int serverSocketFD = initializeServer(PORT,QUEUELENGTH);
 
   waitForConnections(serverSocketFD);
-  puts("Holla;");
   return 0;
 }

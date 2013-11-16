@@ -45,30 +45,21 @@ void addUser(listaUsuarios *lista,char *nombreUsuario){
     if (lista->size==0){
         lista->cabeza=newu;
         lista->cola=newu;
-        printf("hola\n");
     }
     else{
         lista->cola->sig = newu;
         lista->cola = newu;
-        printf("chao\n");
     }
 
     // Incremento el tamaño de la lista
     ++lista->size;
-    /*******ESTO HAY QUE BORRARLO***********/
-    printf("La cabeza ahora es %s\n",lista->cabeza->username);
-    printf("La cola ahora es %s\n",lista->cola->username);
 }
 
 void removeUser(listaUsuarios *lista, char *username){
     usuarios *act;
     act = lista->cabeza;
-    printf("%s\n",act->username);
-    printf("%s\n",username);
     
     if (strcmp(act->username,username) == 0){
-
-        printf("balsada"); 
         lista->cabeza = lista->cabeza->sig;
     }else{
         while (act->sig != NULL){
@@ -122,34 +113,21 @@ void addChatRoom(chatRoomList *list, chatRooms *newChatRoom){
     if (list->size==0){
         list->head=newChatRoom;
         list->tail=newChatRoom;
-        /*******ESTO HAY QUE BORRARLO***********/
-        printf("hola\n");
     }
     else{
         list->tail->next = newChatRoom;
         list->tail = newChatRoom;
-        /*******ESTO HAY QUE BORRARLO***********/
-        printf("chao\n");
     }
 
     // Incremento el tamaño de la lista
     ++list->size;
-    /*******ESTO HAY QUE BORRARLO***********/
-    printf("La cabeza ahora es %s\n",list->head->chatRoomName);
-    printf("La cola ahora es %s\n",list->tail->chatRoomName);
 }
 
 void removeChatRoom(chatRoomList *list, char *chatRoom){
     chatRooms *act;
     act = list->head;
-    /*******ESTO HAY QUE BORRARLO***********/
-    printf("%s\n",act->chatRoomName);
-    printf("%s\n",chatRoom);
     
     if (strcmp(act->chatRoomName,chatRoom) == 0){
-        /*******ESTO HAY QUE BORRARLO***********/
-        printf("balsada"); 
-        
         list->head = list->head->next;
     }else{
         while (act->next != NULL){
