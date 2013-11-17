@@ -1,26 +1,19 @@
 /****************************
- schat.c
+ cchat.c
  
  Andrea Balbás        09-10076
  Gustavo El Khoury    10-10226     
  
  Septiembre - Diciembre 2013
  ****************************/
-/************************************************************
-tcpechoclient.c
-
-This is a client for the tcp echo server.  It sends anything
-read from standard input to the server, reads the responses,
-and sends them to standard output.
-
-Copyright (C) 1995 by Fred Sullivan      All Rights Reserved
-************************************************************/
 #include <ctype.h>
 #include <unistd.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/types.h>
 #include <sys/socket.h>
+#include <errno.h>
+#include <sysexits.h>
 #include <netinet/in.h>
 #include <string.h>
 #include "errors.h"
@@ -45,6 +38,8 @@ void copy(int sockfd) {
   }
 }
 
+
+
 int main (int argc, char **argv){
   int index;
   int flag;
@@ -61,12 +56,13 @@ int main (int argc, char **argv){
   strcat(username,rand);
 
   // Archivo de entrada. Puede ser vacío
+  //NOTA: creo que podriamos poner filename[] y asi no limitar la extension
   char filename[100] = "";
 
 
   opterr = 0;
 
-  while ((flag = getopt (argc, argv, "h:p:n:a:")) != -1)
+  while ((flag = getopt (argc, argv, "-h:-p:-n:-a:")) != -1)
    switch (flag)
      {
      case 'h':
@@ -80,6 +76,7 @@ int main (int argc, char **argv){
        break;
      case 'a':
        strcpy(filename,optarg);
+       printf("El archivo a abrir es %s", filename);
        break;
      case '?':
        if (optopt == 'h' || optopt == 'p' || optopt == 'n' || optopt == 'a')
@@ -121,8 +118,24 @@ int main (int argc, char **argv){
     fatalError("can't connect to server");
 
   /* Copy input to the server. */
-  puts("Blah");
-  copyDataToFD(0,clientSocketFD);
+  if (strlen(filename) != 0){
+    FILE *input;
+    input = fopen(filename,"r");
+    if (input == NULL){
+        perror("No se encuentra el archivo");
+        exit(EX_NOINPUT);
+    }else{
+        char command[] = "";
+        int n;
+        while (feof(input) == 0){
+            fgets(command, 170, input);
+            n = write(clientSocketFD, command, sizeof(command));
+        }
+    }
+    fclose(input);
+  }
+  // n = write(sockfd,,2);
+  //copyDataToFD(0,clientSocketFD);
   close(clientSocketFD);
 
   exit(EXIT_SUCCESS);
