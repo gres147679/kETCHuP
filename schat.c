@@ -53,8 +53,11 @@ void serveClient(struct sockaddr_in clientAddress,int newClientSocketFD){
   char command[4];
   command[3]='\0';
 
-  int n = read(newClientSocketFD,buffer,169); 
-  strncpy(command,buffer,3);
+  commandPacket myCommand;
+  readCommandFromSocket(newClientSocketFD,&myCommand);
+  
+  strncpy(command,myCommand.command,3);
+
 
   // Definición de los comandos
   if ( strcmp(command,"sal") == 0 ){
@@ -102,11 +105,13 @@ void waitForConnections(int serverSocketFD){
   /*Servidor*/
   
     while((newClientSocketFD = accept(serverSocketFD, (struct sockaddr *) &clientAddress, &clientAddresslength)) >= 0) {
+        
         //Se agrega el usuario a la lista de usuarios del chat
         snprintf(user, sizeof(user), "%i", newClientSocketFD);
         addUser(&users, user);
-        while(1)    
-            serveClient(clientAddress,newClientSocketFD);
+        
+
+        serveClient(clientAddress,newClientSocketFD);
         printf("...Done\n");
         close(newClientSocketFD);
     }

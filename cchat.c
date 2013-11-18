@@ -125,6 +125,7 @@ int main (int argc, char **argv){
         perror("No se encuentra el archivo");
         exit(EX_NOINPUT);
     }else{
+
         char command[] = "";
         int n;
         while (feof(input) == 0){
@@ -134,8 +135,23 @@ int main (int argc, char **argv){
     }
     fclose(input);
   }
-  // n = write(sockfd,,2);
-  //copyDataToFD(0,clientSocketFD);
+  
+
+  // Prueba: el cliente envia fue
+  char command[4];
+  command[0]='f';
+  command[1]='u';
+  command[2]='e';
+  command[3]='\0';
+
+  char *arg = (char *) malloc (4*sizeof(char));
+  arg ="pep";
+
+  printf("%d\n",strlen(arg));
+  
+  sendCommandToSocket(clientSocketFD,command,arg);
+
+
   close(clientSocketFD);
 
   exit(EXIT_SUCCESS);
