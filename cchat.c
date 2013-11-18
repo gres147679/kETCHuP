@@ -147,7 +147,7 @@ int main (int argc, char **argv){
   char *arg = (char *) malloc (4*sizeof(char));
   arg ="pep";
 
-  printf("%d\n",strlen(arg));
+  printf("%d\n",(int)strlen(arg));
   
   sendCommandToSocket(clientSocketFD,command,arg);
 
