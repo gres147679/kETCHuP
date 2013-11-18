@@ -10,7 +10,16 @@
  
  Septiembre - Diciembre 2013
  ****************************/
+typedef struct commandPacket{
+  char command[4];
+  char *argument;
+} commandPacket;
+
 
 void copyDataToFD(int, int);
 
 void copyDataToArray(int from, char *to) ;
+
+int readCommandFromSocket(int socketFD, commandPacket *receivedCommand);
+
+int sendCommandToSocket(int socketFD, char command[4], char *argument);
