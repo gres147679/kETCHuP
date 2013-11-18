@@ -55,15 +55,6 @@ int readCommandFromSocket(int socketFD, commandPacket *receivedCommand){
   char command[4];
   int argLength;
   int response = 0;
-  
-  char buffer [100];
-
-  // El servidor limpia el socket
-  //n = read(socketFD,buffer,169);
-  //puts("webo");
-
-  // El servidor saluda
-  if (write(socketFD,&response,4) == -1) fatalError("Server initialization error");
 
   // El cliente manda el comando, y el servidor lo lee
   n = read(socketFD,&receivedCommand->command,4);
@@ -98,10 +89,6 @@ int sendCommandToSocket(int socketFD, char command[4], char *argument){
   int serverResponse = 0;
   int argLength = strlen(argument);
   int n = 0;
-
-  // El cliente espera que el servidor hable
-  n = read(socketFD,&serverResponse,4);
-  if (n!=4 || serverResponse != 0) fatalError("Client initialization error");
 
   // El cliente escribe el comando
   puts(command);
