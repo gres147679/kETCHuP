@@ -31,13 +31,16 @@ int initializeServer(int serverPort,int serverQueueLength){
   
   /*Abrir el socket*/
   serverSocketFD = socket(PF_INET, SOCK_STREAM,0);
+  int optval = 1;
+  setsockopt(serverSocketFD, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof optval);
   if (serverSocketFD < 0)
     fatalError("No se puede abrir el socket");
   
   /*Asociar el socket a una direccion*/
   bzero(&serverAddress, sizeof(serverAddress));
   serverAddress.sin_family = PF_INET;
-  serverAddress.sin_addr.s_addr = htonl(INADDR_ANY);
+  serverAddress.sin_addr.s_addr = inet_addr("127.0.0.1");
+  //serverAddress.sin_addr.s_addr = htonl(INADDR_ANY);
   serverAddress.sin_port = htons(serverPort);
   if (bind(serverSocketFD, (struct sockaddr *) &serverAddress,
            sizeof(serverAddress)) != 0)
@@ -52,46 +55,51 @@ void serveClient(struct sockaddr_in clientAddress,int newClientSocketFD){
   char buffer[170];
   char command[4];
   command[3]='\0';
-
-  commandPacket myCommand;
-  readCommandFromSocket(newClientSocketFD,&myCommand);
+  int heartBeat;
   
-  strncpy(command,myCommand.command,3);
+  while( read(newClientSocketFD,&heartBeat,4)>0 ){
+    commandPacket myCommand;
+    readCommandFromSocket(newClientSocketFD,&myCommand);
+    
+    strncpy(command,myCommand.command,3);
 
 
-  // Definición de los comandos
-  if ( strcmp(command,"sal") == 0 ){
-    printf("Mandaste sal\n");
-    //Llamada a implementación de sal
-  }
-  else if ( strcmp(command,"usu") == 0 ){
-    printf("Mandaste usu\n");
-    //Llamada a implementación de usu
-  }
-  else if ( strcmp(command,"men") == 0 ){
-    printf("Mandaste men\n");
-    //Llamada a implementación de usu
-  }
-  else if ( strcmp(command,"sus") == 0 ){
-    printf("Mandaste sus\n");
-    //Llamada a implementación de sus
-  }
-  else if ( strcmp(command,"des") == 0 ){
-    printf("Mandaste des\n");
-    //Llamada a implementación de des
-  }
-  else if ( strcmp(command,"cre") == 0 ){
-    printf("Mandaste cre\n");
-    //Llamada a implementación de cre
-  }
-  else if ( strcmp(command,"eli") == 0 ){
-    printf("Mandaste eli\n");
-    //Llamada a implementación de eli
-  }
-  else if ( strcmp(command,"fue") == 0 ){
-    printf("Mandaste fue\n");
-  }else{
-    printf("Comando erroneo\n");
+    // Definición de los comandos
+    if ( strcmp(command,"sal") == 0 ){
+	printf("Mandaste sal\n");
+	//Llamada a implementación de sal
+    }
+    else if ( strcmp(command,"usu") == 0 ){
+	printf("Mandaste usu\n");
+	//Llamada a implementación de usu
+    }
+    else if ( strcmp(command,"men") == 0 ){
+	printf("Mandaste men\n");
+	//Llamada a implementación de usu
+    }
+    else if ( strcmp(command,"sus") == 0 ){
+	printf("Mandaste sus\n");
+	//Llamada a implementación de sus
+    }
+    else if ( strcmp(command,"des") == 0 ){
+	printf("Mandaste des\n");
+	//Llamada a implementación de des
+    }
+    else if ( strcmp(command,"cre") == 0 ){
+	printf("Mandaste cre con argumento %s\n",myCommand.argument);
+	
+	//Llamada a implementación de cre
+    }
+    else if ( strcmp(command,"eli") == 0 ){
+	printf("Mandaste eli\n");
+	//Llamada a implementación de eli
+    }
+    else if ( strcmp(command,"fue") == 0 ){
+	printf("Mandaste fue\n");
+    }else{
+	printf("Comando erroneo: ");
+	puts(command);
+    }
   }
   return;
 }
@@ -105,7 +113,6 @@ void waitForConnections(int serverSocketFD){
   /*Servidor*/
   
     while((newClientSocketFD = accept(serverSocketFD, (struct sockaddr *) &clientAddress, &clientAddresslength)) >= 0) {
-        
         //Se agrega el usuario a la lista de usuarios del chat
         snprintf(user, sizeof(user), "%i", newClientSocketFD);
         addUser(&users, user);
@@ -113,7 +120,7 @@ void waitForConnections(int serverSocketFD){
 
         serveClient(clientAddress,newClientSocketFD);
         printf("...Done\n");
-        close(newClientSocketFD);
+        //close(newClientSocketFD);
     }
 }
 

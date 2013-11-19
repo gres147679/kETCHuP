@@ -21,24 +21,45 @@
 
 #define PORT 20226
 
-void copy(int sockfd) {
-  int c;
-  char outbuffer;
-  char inbuffer;
+// Dada una línea del archivo de entrada, la rutina rellena un commandPacket
+// con el comando y su argumento, sólo si son comandos válidos. De lo contrario,
+// retorna -1
 
-  while ((c = getchar()) != EOF) {
-    /* Write a character to the socket. */
-    outbuffer = c;
-    if (write(sockfd, &outbuffer, 1) != 1)
-      fatalError("can't write to socket");
-    /* Read the response and print it. */
-    if (read(sockfd, &inbuffer, 1) != 1)
-      fatalError("can't read from socket");
-    putchar(inbuffer);
-  }
+int getCommandFromLine(commandPacket *newCommand,char *line){
+    newCommand->command[3]='\0';
+    size_t lineLength = strlen(line);
+    
+   
+    // Comandos válidos con argumentos
+    if (lineLength>3){
+	char backup = line[3];
+	line[3]='\0';
+	if ( !strcmp(line,"men") || !strcmp(line,"sus") || !strcmp(line,"cre")
+	|| !strcmp(line,"eli") ){
+	    
+	    strncpy(newCommand->command,line,3);
+	    
+	    newCommand->argument = (char *) malloc ((lineLength-4)*sizeof(char));
+	    strncpy(newCommand->argument,line+4,lineLength-4);	    
+	    return 0;
+	}
+	else{
+	    line[3]=backup;
+	    return -1;
+	}
+    }
+    
+    else if ( !strcmp(line,"sal") || !strcmp(line,"usu") || !strcmp(line,"des")
+ 	|| !strcmp(line,"fue") ){
+	
+	strncpy(newCommand->command,line, 3);    
+	newCommand->argument = (char *) malloc (sizeof(char));
+	newCommand->argument[0]='\0';
+	return 0;
+    } 
+    return -1;    
+    
 }
-
-
 
 int main (int argc, char **argv){
   int index;
@@ -76,7 +97,7 @@ int main (int argc, char **argv){
        break;
      case 'a':
        strcpy(filename,optarg);
-       printf("El archivo a abrir es %s", filename);
+       printf("El archivo a abrir es %s\n", filename);
        break;
      case '?':
        if (optopt == 'h' || optopt == 'p' || optopt == 'n' || optopt == 'a')
@@ -117,6 +138,7 @@ int main (int argc, char **argv){
               sizeof(serverAddress)) < 0)
     fatalError("can't connect to server");
 
+  
   /* Copy input to the server. */
   if (strlen(filename) != 0){
     FILE *input;
@@ -124,35 +146,54 @@ int main (int argc, char **argv){
     if (input == NULL){
         perror("No se encuentra el archivo");
         exit(EX_NOINPUT);
-    }else{
-
-        char command[] = "";
+    }
+    else{
+	char *buffer = NULL;
+        char command[4];
+	size_t bufferSize = 0;
         int n;
-        while (feof(input) == 0){
-            fgets(command, 170, input);
-            n = write(clientSocketFD, command, sizeof(command));
+	int lineLength;
+	
+	commandPacket newCommand;
+        while ( !feof(input) ){
+	    getline(&buffer,&bufferSize,input);
+	    
+	    if (!feof(input)){
+		lineLength = strlen(buffer);
+		buffer[lineLength-1]='\0';
+	    }
+	    
+	    if (getCommandFromLine(&newCommand,buffer)!=-1){
+		//puts(newCommand.command);
+		//puts(newCommand.argument);
+		sendCommandToSocket(clientSocketFD,newCommand);
+	    }
+	    
+	    free(buffer);
+	    buffer=NULL;
         }
     }
     fclose(input);
   }
   
+  while(1);
+  
 
   // Prueba: el cliente envia fue
-  char command[4];
-  command[0]='f';
-  command[1]='u';
-  command[2]='e';
-  command[3]='\0';
-
-  char *arg = (char *) malloc (4*sizeof(char));
-  arg ="pep";
-
-  printf("%d\n",(int)strlen(arg));
+  commandPacket newCommand;
   
-  sendCommandToSocket(clientSocketFD,command,arg);
+  newCommand.command[0]='f';
+  newCommand.command[1]='u';
+  newCommand.command[2]='e';
+  newCommand.command[3]='\0';
+
+  newCommand.argument = (char *) malloc (4*sizeof(char));
+  newCommand.argument ="pep";
+  
+  //sendCommandToSocket(clientSocketFD,newCommand);
 
 
-  close(clientSocketFD);
+  //close(clientSocketFD);
 
   exit(EXIT_SUCCESS);
 
