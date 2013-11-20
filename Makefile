@@ -19,7 +19,7 @@ socketManagement.o : errors.o socketManagement.c socketManagement.h
 	$(CC) $(CFLAGS) -c socketManagement.c errors.o
 
 sclient : schat.c socketManagement.o errors.o 
-	$(CC) $(CFLAGS) -o schat schat.c errors.o socketManagement.o $(LIBS)
+	$(CC) $(CFLAGS) -o schat -pthread schat.c errors.o socketManagement.o $(LIBS)
 
 cclient : cchat.c errors.o
 	$(CC) $(CFLAGS) -o cchat cchat.c errors.o socketManagement.o $(LIBS)
