@@ -14,6 +14,8 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <string.h>
+#include <pthread.h>
+
 #include "errors.h"
 #include "socketManagement.h"
 #include "lista.h"
@@ -21,7 +23,21 @@
 #define PORT 20226
 #define QUEUELENGTH 10
 
-listaUsuarios users;
+
+// Lista de todos los usuarios del servidor
+userList globalUserList;
+
+// Lista de salas en el servidor
+chatRoomList chatRoomsList;
+
+// Mutex de la lista global de usuarios
+pthread_mutex_t globalUserListMutex = PTHREAD_MUTEX_INITIALIZER;
+
+// Mutex de la lista de salas
+pthread_mutex_t chatRoomsListMutex = PTHREAD_MUTEX_INITIALIZER;
+
+// Arreglo de TIDs. Debe ser UNA LISTA
+pthread_t tidList[512];
 
 int initializeServer(int serverPort,int serverQueueLength){
   int serverSocketFD, newClientSocketFD;  
@@ -51,7 +67,13 @@ int initializeServer(int serverPort,int serverQueueLength){
   return serverSocketFD;
 }
 
-void serveClient(struct sockaddr_in clientAddress,int newClientSocketFD){
+void * serveClient(void *args){
+  // Argumentos
+  void **argArray = (void **) args;
+  struct sockaddr_in *clientAddress = (struct sockaddr_in *)(argArray[4]);
+  int *newClientSocketFDPointer = (int *)argArray[5];
+  int newClientSocketFD = *newClientSocketFDPointer;
+  
   char buffer[170];
   char command[4];
   command[3]='\0';
@@ -111,14 +133,29 @@ void waitForConnections(int serverSocketFD){
   char user [20];
 
   /*Servidor*/
+    
+    // Se crea la estructura de argumentos para los threads
+    void **argList;
+    argList = (void *) malloc(6*sizeof(int));
+    argList[0] = &globalUserList;
+    argList[1] = &globalUserListMutex;
+    argList[2] = &chatRoomsList;
+    argList[3] = &chatRoomsListMutex;
+    
+    // Cantidad de clientes
+    int userCount = 0;
   
     while((newClientSocketFD = accept(serverSocketFD, (struct sockaddr *) &clientAddress, &clientAddresslength)) >= 0) {
         //Se agrega el usuario a la lista de usuarios del chat
         snprintf(user, sizeof(user), "%i", newClientSocketFD);
-        addUser(&users, user);
+        addUser(&globalUserList, user);
         
-
-        serveClient(clientAddress,newClientSocketFD);
+        argList[4] = &clientAddress;
+        argList[5] = &newClientSocketFD;
+        
+        pthread_create(&tidList[userCount++],NULL,&serveClient,argList);
+        
+        //serveClient(argList);
         printf("...Done\n");
         //close(newClientSocketFD);
     }
@@ -161,7 +198,7 @@ main(int argc, char *argv[]){
   for (index = optind; index < argc; index++)
    printf ("No es una opción: %s\n", argv[index]);
   
-  initialize(&users);
+  initialize(&globalUserList);
   int serverSocketFD = initializeServer(PORT,QUEUELENGTH);
 
   waitForConnections(serverSocketFD);
