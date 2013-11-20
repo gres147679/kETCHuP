@@ -1,6 +1,6 @@
 /****************************
 lista.h
-Lista enlazada simple de usuarios
+Lista enlazada simple de userBox
  Andrea Balbás        09-10076
  Gustavo El Khoury    10-10226     
  
@@ -13,27 +13,27 @@ Lista enlazada simple de usuarios
 #include <string.h>
 #include <pthread.h>
 
-typedef struct usuarios{
+typedef struct userBox{
     char *username;
-    struct usuarios *sig;
-} usuarios; 
+    struct userBox *sig;
+} userBox; 
 
-typedef struct listaUsuarios{
+typedef struct userList{
     int size;
-    usuarios *cabeza;
-    usuarios *cola;
-} listaUsuarios;
+    userBox *head;
+    userBox *tail;
+} userList;
 
-void initialize(listaUsuarios *lista){
-    lista->cabeza = NULL;
-    lista->cola = NULL;
+void initialize(userList *lista){
+    lista->head = NULL;
+    lista->tail = NULL;
     lista->size = 0;
 }
 
-void addUser(listaUsuarios *lista,char *nombreUsuario){
+void addUser(userList *lista,char *nombreUsuario){
     // Creamos la nueva caja de la lista
-    usuarios *newu;
-    newu = (usuarios *) malloc (sizeof(usuarios));
+    userBox *newu;
+    newu = (userBox *) malloc (sizeof(userBox));
     if (newu==NULL) 
       perror("malloc");
 
@@ -43,24 +43,24 @@ void addUser(listaUsuarios *lista,char *nombreUsuario){
 
     // Si la lista está vacía
     if (lista->size==0){
-        lista->cabeza=newu;
-        lista->cola=newu;
+        lista->head=newu;
+        lista->tail=newu;
     }
     else{
-        lista->cola->sig = newu;
-        lista->cola = newu;
+        lista->tail->sig = newu;
+        lista->tail = newu;
     }
 
     // Incremento el tamaño de la lista
     ++lista->size;
 }
 
-void removeUser(listaUsuarios *lista, char *username){
-    usuarios *act;
-    act = lista->cabeza;
+void removeUser(userList *lista, char *username){
+    userBox *act;
+    act = lista->head;
     
     if (strcmp(act->username,username) == 0){
-        lista->cabeza = lista->cabeza->sig;
+        lista->head = lista->head->sig;
     }else{
         while (act->sig != NULL){
             char *usernameSiguiente = act->sig->username;
@@ -75,14 +75,14 @@ void removeUser(listaUsuarios *lista, char *username){
 }
 
 
-void printList(listaUsuarios lista){
+void printList(userList lista){
     //creo un elemento tmp para iterar
-    usuarios *tmp;
-    tmp = (usuarios *) malloc (sizeof(usuarios));
+    userBox *tmp;
+    tmp = (userBox *) malloc (sizeof(userBox));
     if (tmp==NULL)
         perror("malloc");
     
-    tmp = lista.cabeza;
+    tmp = lista.head;
     while (tmp != NULL){
         printf("Usuario: %s \n",tmp->username);
         tmp = tmp->sig;
@@ -92,7 +92,7 @@ void printList(listaUsuarios lista){
 typedef struct chatRooms{
     char *chatRoomName;
     //pthread_t chatThread;
-    listaUsuarios users;
+    userList users;
     struct chatRooms *next;
 } chatRooms;
 
@@ -138,6 +138,19 @@ void removeChatRoom(chatRoomList *list, char *chatRoom){
 
         if (act->next != NULL){
             act->next = act->next->next;
+        }
+    }
+}
+
+void addUserToCRList(chatRoomList *list, char *chatRoom, char * newUser){
+    chatRooms *act;
+    act = list->head;
+    while (act->next != NULL){
+        if (strcmp(act->chatRoomName,chatRoom) == 0){
+            addUser(&(act->users),newUser);
+            break;
+        }else{
+            act = act->next;
         }
     }
 }
