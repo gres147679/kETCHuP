@@ -1,7 +1,7 @@
 /****************************
 lista.h
 Lista enlazada simple de userBox
- Andrea Balbás        09-10076
+ Andrea BalbÃ¡s        09-10076
  Gustavo El Khoury    10-10226     
  
  Septiembre - Diciembre 2013
@@ -41,7 +41,7 @@ void addUser(userList *lista,char *nombreUsuario){
     newu->username = nombreUsuario;
     newu->sig = NULL;
 
-    // Si la lista está vacía
+    // Si la lista estÃ¡ vacÃ­a
     if (lista->size==0){
         lista->head=newu;
         lista->tail=newu;
@@ -51,7 +51,7 @@ void addUser(userList *lista,char *nombreUsuario){
         lista->tail = newu;
     }
 
-    // Incremento el tamaño de la lista
+    // Incremento el tamaÃ±o de la lista
     ++lista->size;
 }
 
@@ -109,7 +109,7 @@ void initializeCRList(chatRoomList *list){
 }
 
 void addChatRoom(chatRoomList *list, chatRooms *newChatRoom){
-    // Si la lista está vacía
+    // Si la lista estÃ¡ vacÃ­a
     if (list->size==0){
         list->head=newChatRoom;
         list->tail=newChatRoom;
@@ -119,7 +119,7 @@ void addChatRoom(chatRoomList *list, chatRooms *newChatRoom){
         list->tail = newChatRoom;
     }
 
-    // Incremento el tamaño de la lista
+    // Incremento el tamaÃ±o de la lista
     ++list->size;
 }
 
@@ -152,6 +152,16 @@ void addUserToCRList(chatRoomList *list, char *chatRoom, char * newUser){
         }else{
             act = act->next;
         }
+    }
+}
+
+void removeUserFromCRList(chatRoomList *list, char* username){
+    chatRooms *act;
+    act = list->head;
+    userList actUsers;
+    while (act->next != NULL){
+        actUsers = act->users;
+        removeUser(&actUsers,username);
     }
 }
 
