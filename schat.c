@@ -148,7 +148,7 @@ void waitForConnections(int serverSocketFD){
     while((newClientSocketFD = accept(serverSocketFD, (struct sockaddr *) &clientAddress, &clientAddresslength)) >= 0) {
         //Se agrega el usuario a la lista de usuarios del chat
         snprintf(user, sizeof(user), "%i", newClientSocketFD);
-        addUser(&globalUserList, user);
+        addUser(&globalUserList, user, newClientSocketFD);
         
         argList[4] = &clientAddress;
         argList[5] = &newClientSocketFD;

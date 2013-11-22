@@ -42,7 +42,8 @@ void copyDataToArray(int from, char *to) {
 }
 
 
-// Implementa nuestro protocolo de comunicacion, que sigue estos pasos:
+// Implementa nuestro protocolo de comunicacion para mandar comandos, 
+// que sigue estos pasos:
 // -)El cliente se conecta y envia el comando
 // -)El servidor lee el comando, y le avisa al cliente
 // -)El cliente envia la longitud del parametro que sigue
@@ -120,6 +121,65 @@ int sendCommandToSocket(int socketFD, commandPacket newCommand){
     // El cliente recibe respuesta final del servidor
     n = read(socketFD,&serverResponse,4);
     if (n!=4 || serverResponse != 0) fatalError("Client protocol error 6");
+  }
+  
+  //puts("El cliente termino");
+  return 0;
+}
+
+
+// Implementa nuestro protocolo de comunicacion para que el servidor envie
+// la respuesta a los comandos, que sigue estos pasos:
+// -)El servidor envia la longitud del string de respuesa, y el cliente acepta
+// -)El servidor recibe la señal, y envia el string. El cliente confirma que
+// recibio la respuesta
+
+char *readResponseFromServer(int socketFD){
+  int n = 1;
+  int answerLength;
+  int allGood = 0;
+  char *answer;
+
+  
+  // El cliente lee la longitud
+  n = read(socketFD,&answerLength,4);
+  if (n!=4) fatalError("Response reading error 1");  
+  //printf("La longitud es %d\n",answerLength);
+
+  // El cliente responde, para que el servidor mande el parametro
+  if (write(socketFD,&allGood,4) == -1) fatalError("Response reading error 2");
+
+  // Si la respuesta no es vacio, el cliente lee y responde
+  if (answerLength != 0){
+    answer = (char *) malloc(answerLength*sizeof(char));
+    n = read(socketFD,answer,answerLength);    
+    write(socketFD,&allGood,4);
+  }
+
+  return 0;
+}
+
+int sendResponseToClient(int socketFD, char *answer){
+  //puts("El cliente empieza");  
+    
+  int serverResponse = 0;
+  int answerLength = strlen(newCommand.argument)+1;
+  int n = 0;
+
+  // El servidor manda la longitud de la respuesta
+  if (write(socketFD,&answerLength,4) == -1) fatalError("Response sending error 1");
+  //printf("La longitud es %d\n",argLength);
+
+  // El servidor espera la respuesta del cliente, para mandar la respuesta
+  n = read(socketFD,&serverResponse,4);
+  if (n!=4 || serverResponse != 0) fatalError("Response sending error 2");
+
+  if (answerLength != 1){
+    if ( (n=write(socketFD,answer,answerLength)) == -1) fatalError("Response sending error 3");
+    //printf("Se han mandado %d\n",n);
+    // El cliente recibe respuesta final del servidor
+    n = read(socketFD,&serverResponse,4);
+    if (n!=4 || serverResponse != 0) fatalError("Response sending error 4");
   }
   
   //puts("El cliente termino");
