@@ -164,9 +164,9 @@ int main (int argc, char **argv){
 	    }
 	    
 	    if (getCommandFromLine(&newCommand,buffer)!=-1){
-		//puts(newCommand.command);
-		//puts(newCommand.argument);
-		sendCommandToSocket(clientSocketFD,newCommand);
+    		puts(newCommand.command);
+    		//puts(newCommand.argument);
+    		sendCommandToSocket(clientSocketFD,newCommand);
 	    }
 	    
 	    free(buffer);

@@ -57,10 +57,16 @@ int readCommandFromSocket(int socketFD, commandPacket *receivedCommand){
   int argLength;
   int response = 0;
 
-  //puts("El servidor empieza");
+  // El servidor lee el hola
+  //n = read(socketFD,&argLength,4);
+  //if (n!=4) fatalError("Server protocol error 0");  
+
   // El cliente manda el comando, y el servidor lo lee
   n = read(socketFD,&receivedCommand->command,4);
-  if (n!=4) fatalError("Server protocol error 1");
+  if (n!=4) {
+    printf("%d\n",n);
+    fatalError("Server protocol error 1");
+  }
 
   // El servidor responde, para que el cliente mande la longitud del parametro
   if (write(socketFD,&response,4) == -1) fatalError("Server protocol error 2");
@@ -98,7 +104,7 @@ int sendCommandToSocket(int socketFD, commandPacket newCommand){
   if (write(socketFD,&serverResponse,4) == -1) fatalError("Client protocol error 0");
   
   // El cliente escribe el comando
-  if (write(socketFD,newCommand.command,4) == -1) fatalError("Client protocol error 1");
+  if (n=write(socketFD,newCommand.command,4) == -1) fatalError("Client protocol error 1");
 
   // El cliente espera la respuesta del servidor, para mandar
   // la longitud del parametro
@@ -163,7 +169,7 @@ int sendResponseToClient(int socketFD, char *answer){
   //puts("El cliente empieza");  
     
   int serverResponse = 0;
-  int answerLength = strlen(newCommand.argument)+1;
+  int answerLength = strlen(answer)+1;
   int n = 0;
 
   // El servidor manda la longitud de la respuesta

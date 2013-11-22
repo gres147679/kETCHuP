@@ -13,6 +13,7 @@ Lista enlazada simple de userBox
 #include <string.h>
 #include <pthread.h>
 
+//Estructuras para listas de usuarios
 typedef struct userBox{
     char *username;
     int clientSocketFD;
@@ -25,72 +26,7 @@ typedef struct userList{
     userBox *tail;
 } userList;
 
-void initialize(userList *lista){
-    lista->head = NULL;
-    lista->tail = NULL;
-    lista->size = 0;
-}
-
-void addUser(userList *lista,char *nombreUsuario, int clientSocketFD){
-    // Creamos la nueva caja de la lista
-    userBox *newu;
-    newu = (userBox *) malloc (sizeof(userBox));
-    if (newu==NULL) 
-      perror("malloc");
-
-    // Rellenamos la caja
-    newu->username = nombreUsuario;
-    newu->clientSocketFD = clientSocketFD;
-    newu->sig = NULL;
-
-    // Si la lista está vacía
-    if (lista->size==0){
-        lista->head=newu;
-        lista->tail=newu;
-    }
-    else{
-        lista->tail->sig = newu;
-        lista->tail = newu;
-    }
-
-    // Incremento el tamaño de la lista
-    ++lista->size;
-}
-
-void removeUser(userList *lista, char *username){
-    userBox *act;
-    act = lista->head;
-    
-    if (strcmp(act->username,username) == 0){
-        lista->head = lista->head->sig;
-    }else{
-        while (act->sig != NULL){
-            char *usernameSiguiente = act->sig->username;
-            if ( strcmp(usernameSiguiente,username)==0 ) break;
-            act = act->sig;
-        }
-
-        if (act->sig != NULL){
-            act->sig = act->sig->sig;
-        }
-    }
-}
-
-
-void printList(userList lista){
-    //creo un elemento tmp para iterar
-    userBox *tmp;
-    tmp = (userBox *) malloc (sizeof(userBox));
-    if (tmp==NULL)
-        perror("malloc");
-    
-    tmp = lista.head;
-    while (tmp != NULL){
-        printf("Usuario: %s \n",tmp->username);
-        tmp = tmp->sig;
-    }
-}
-
+//Estructuras para listas de salas de chat
 typedef struct chatRooms{
     char *chatRoomName;
     //pthread_t chatThread;
@@ -104,83 +40,7 @@ typedef struct chatRoomList{
     chatRooms *tail;
 }chatRoomList;
 
-void initializeCRList(chatRoomList *list){
-    list->head = NULL;
-    list->tail = NULL;
-    list->size = 0;
-}
-
-void addChatRoom(chatRoomList *list, chatRooms *newChatRoom){
-    // Si la lista está vacía
-    if (list->size==0){
-        list->head=newChatRoom;
-        list->tail=newChatRoom;
-    }
-    else{
-        list->tail->next = newChatRoom;
-        list->tail = newChatRoom;
-    }
-
-    // Incremento el tamaño de la lista
-    ++list->size;
-}
-
-void removeChatRoom(chatRoomList *list, char *chatRoom){
-    chatRooms *act;
-    act = list->head;
-    
-    if (strcmp(act->chatRoomName,chatRoom) == 0){
-        list->head = list->head->next;
-    }else{
-        while (act->next != NULL){
-            char *nextChatRoom = act->next->chatRoomName;
-            if ( strcmp(nextChatRoom,chatRoom)==0 ) break;
-            act = act->next;
-        }
-
-        if (act->next != NULL){
-            act->next = act->next->next;
-        }
-    }
-}
-
-void addUserToCRList(chatRoomList *list, char *chatRoom, char * newUser, int clientSocketFD){
-    chatRooms *act;
-    act = list->head;
-    while (act->next != NULL){
-        if (strcmp(act->chatRoomName,chatRoom) == 0){
-            addUser(&(act->users),newUser, clientSocketFD);
-            break;
-        }else{
-            act = act->next;
-        }
-    }
-}
-
-void removeUserFromCRList(chatRoomList *list, char* username){
-    chatRooms *act;
-    act = list->head;
-    userList actUsers;
-    while (act->next != NULL){
-        actUsers = act->users;
-        removeUser(&actUsers,username);
-    }
-}
-
-void printCRList(chatRoomList list){
-    //creo un elemento tmp para iterar
-    chatRooms *tmp;
-    tmp = (chatRooms *) malloc (sizeof(chatRooms));
-    if (tmp==NULL)
-        perror("malloc");
-    
-    tmp = list.head;
-    while (tmp != NULL){
-        printf("Chat room: %s \n",tmp->chatRoomName);
-        tmp = tmp->next;
-    }
-}
-
+//Estructuras para listas de hilos
 typedef struct threadBox{
     pthread_t tid;
     struct threadBox *next;
@@ -192,61 +52,33 @@ typedef struct threadList{
     threadBox *tail;
 } threadList;
 
-void addThread(threadList *list,pthread_t thread){
-    // Creamos la nueva caja de la lista
-    threadBox *newt;
-    newt = (threadBox *) malloc (sizeof(threadBox));
-    if (newt==NULL) 
-      perror("malloc");
+//Metodos de lista de usuarios
+void initialize(userList *lista);
 
-    // Rellenamos la caja
-    newt->tid = thread;
-    newt->next = NULL;
+void addUser(userList *lista,char *nombreUsuario, int clientSocketFD);
 
-    // Si la lista está vacía
-    if (list->size==0){
-        list->head=newt;
-        list->tail=newt;
-    }
-    else{
-        list->tail->next = newt;
-        list->tail = newt;
-    }
+void removeUser(userList *lista, char *username);
 
-    // Incremento el tamaño de la lista
-    ++list->size;
-}
+void printList(userList lista);
 
-void removeThread(threadList *list, pthread_t thread){
-    threadBox *act;
-    act = list->head;
-    
-    if (act->tid == thread){
-        list->head = list->head->next;
-    }else{
-        while (act->next != NULL){
-            pthread_t nextTid = act->next->tid;
-            if ( nextTid == thread ) break;
-            act = act->next;
-        }
+//Metodos de lista de salas de chat
 
-        if (act->next != NULL){
-            act->next = act->next->next;
-        }
-    }
-}
+void initializeCRList(chatRoomList *list);
+
+void addChatRoom(chatRoomList *list, chatRooms *newChatRoom);
+
+void removeChatRoom(chatRoomList *list, char *chatRoom);
+
+void addUserToCRList(chatRoomList *list, char *chatRoom, char * newUser, int clientSocketFD);
+
+void removeUserFromCRList(chatRoomList *list, char* username);
+
+void printCRList(chatRoomList list);
 
 
-void printThreadList(threadList list){
-    //creo un elemento tmp para iterar
-    threadBox *tmp;
-    tmp = (threadBox *) malloc (sizeof(threadBox));
-    if (tmp==NULL)
-        perror("malloc");
-    
-    tmp = list.head;
-    while (tmp != NULL){
-        printf("Thread ID: %i \n",tmp->tid);
-        tmp = tmp->next;
-    }
-}
+//Metodos de lista de hilos
+void addThread(threadList *list,pthread_t thread);
+
+void removeThread(threadList *list, pthread_t thread);
+
+void printThreadList(threadList list);

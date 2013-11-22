@@ -18,7 +18,10 @@
 
 #include "errors.h"
 #include "socketManagement.h"
-#include "lista.h"
+#include "serverCommands.h"
+#ifndef lta
+  #include "lista.h"
+#endif
 
 #define PORT 20226
 #define QUEUELENGTH 10
@@ -93,7 +96,7 @@ void * serveClient(void *args){
     }
     else if ( strcmp(command,"usu") == 0 ){
 	printf("Mandaste usu\n");
-	//Llamada a implementación de usu
+	listUsers(&globalUserList,newClientSocketFD);
     }
     else if ( strcmp(command,"men") == 0 ){
 	printf("Mandaste men\n");

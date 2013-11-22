@@ -1,11 +1,7 @@
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <string.h>
+#define lta
 #include "lista.h"
 
-
-int listUsers(userList *globalUserList, int clientSocketFD);
+char *listUsers(userList *globalUserList, int clientSocketFD);
 
 int listChatrooms(chatRoomList *chatList, int clientSocketFD);
 
