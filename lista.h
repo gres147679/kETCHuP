@@ -15,6 +15,7 @@ Lista enlazada simple de userBox
 
 typedef struct userBox{
     char *username;
+    int clientSocketFD;
     struct userBox *sig;
 } userBox; 
 
@@ -30,7 +31,7 @@ void initialize(userList *lista){
     lista->size = 0;
 }
 
-void addUser(userList *lista,char *nombreUsuario){
+void addUser(userList *lista,char *nombreUsuario, int clientSocketFD){
     // Creamos la nueva caja de la lista
     userBox *newu;
     newu = (userBox *) malloc (sizeof(userBox));
@@ -39,6 +40,7 @@ void addUser(userList *lista,char *nombreUsuario){
 
     // Rellenamos la caja
     newu->username = nombreUsuario;
+    newu->clientSocketFD = clientSocketFD;
     newu->sig = NULL;
 
     // Si la lista está vacía
@@ -142,12 +144,12 @@ void removeChatRoom(chatRoomList *list, char *chatRoom){
     }
 }
 
-void addUserToCRList(chatRoomList *list, char *chatRoom, char * newUser){
+void addUserToCRList(chatRoomList *list, char *chatRoom, char * newUser, int clientSocketFD){
     chatRooms *act;
     act = list->head;
     while (act->next != NULL){
         if (strcmp(act->chatRoomName,chatRoom) == 0){
-            addUser(&(act->users),newUser);
+            addUser(&(act->users),newUser, clientSocketFD);
             break;
         }else{
             act = act->next;
@@ -175,6 +177,76 @@ void printCRList(chatRoomList list){
     tmp = list.head;
     while (tmp != NULL){
         printf("Chat room: %s \n",tmp->chatRoomName);
+        tmp = tmp->next;
+    }
+}
+
+typedef struct threadBox{
+    pthread_t tid;
+    struct threadBox *next;
+} threadBox; 
+
+typedef struct threadList{
+    int size;
+    threadBox *head;
+    threadBox *tail;
+} threadList;
+
+void addThread(threadList *list,pthread_t thread){
+    // Creamos la nueva caja de la lista
+    threadBox *newt;
+    newt = (threadBox *) malloc (sizeof(threadBox));
+    if (newt==NULL) 
+      perror("malloc");
+
+    // Rellenamos la caja
+    newt->tid = thread;
+    newt->next = NULL;
+
+    // Si la lista está vacía
+    if (list->size==0){
+        list->head=newt;
+        list->tail=newt;
+    }
+    else{
+        list->tail->next = newt;
+        list->tail = newt;
+    }
+
+    // Incremento el tamaño de la lista
+    ++list->size;
+}
+
+void removeThread(threadList *list, pthread_t thread){
+    threadBox *act;
+    act = list->head;
+    
+    if (act->tid == thread){
+        list->head = list->head->next;
+    }else{
+        while (act->next != NULL){
+            pthread_t nextTid = act->next->tid;
+            if ( nextTid == thread ) break;
+            act = act->next;
+        }
+
+        if (act->next != NULL){
+            act->next = act->next->next;
+        }
+    }
+}
+
+
+void printThreadList(threadList list){
+    //creo un elemento tmp para iterar
+    threadBox *tmp;
+    tmp = (threadBox *) malloc (sizeof(threadBox));
+    if (tmp==NULL)
+        perror("malloc");
+    
+    tmp = list.head;
+    while (tmp != NULL){
+        printf("Thread ID: %i \n",tmp->tid);
         tmp = tmp->next;
     }
 }
