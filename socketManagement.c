@@ -41,6 +41,71 @@ void copyDataToArray(int from, char *to) {
 
 }
 
+// Procedimientos para que el cliente le mande el nombre de usuario
+// al servidor
+
+int receiveHello(int socketFD, char **username){
+  int nBytesRead = 0;
+  int n = 1;
+  char command[4];
+  int argLength;
+  int response = 0;
+
+  // El servidor lee el hola
+  n = read(socketFD,&argLength,4);
+  if (n!=4) fatalError("Server protocol error 0");  
+
+  // El servidor responde, para que el cliente mande la longitud del parametro
+  if (write(socketFD,&response,4) == -1) fatalError("Server protocol error 2");
+
+  // El servidor lee la longitud
+  n = read(socketFD,&argLength,4);
+  if (n!=4) fatalError("Server protocol error 3");  
+
+  // El servidor responde, para que el cliente mande el parametro
+  if (write(socketFD,&response,4) == -1) fatalError("Server protocol error 4");
+
+  // Si el parametro no es vacio, el servidor lee y responde
+  if (argLength != 1){
+    *username = (char *) malloc(argLength*sizeof(char)+1);
+    n = read(socketFD,*username,argLength);    
+    write(socketFD,&response,4);
+  }
+  
+  return 0;
+}
+
+int sayHello(int socketFD, char *username){  
+  int serverResponse = 0;
+  int argLength = strlen(username)+1;
+  int n = 0;
+
+  // El cliente dice hola
+  if (write(socketFD,&serverResponse,4) == -1) fatalError("Client protocol error 0");
+  
+  // El cliente espera la respuesta del servidor, para mandar
+  // la longitud del nombre de usuario
+  n = read(socketFD,&serverResponse,4);
+  if (n!=4 || serverResponse != 0) {
+      fatalError("Client protocol error 2");
+  }
+
+  // El cliente manda la longitud del nombre de usuario
+  if (write(socketFD,&argLength,4) == -1) fatalError("Client protocol error 3");
+
+  // El cliente espera la respuesta del servidor, para mandar el nombre de usuario
+  n = read(socketFD,&serverResponse,4);
+  if (n!=4 || serverResponse != 0) fatalError("Client protocol error 4");
+
+  if (argLength != 1){
+    if ( (n=write(socketFD,username,argLength)) == -1) fatalError("Client protocol error 5");
+    // El cliente recibe respuesta final del servidor
+    n = read(socketFD,&serverResponse,4);
+    if (n!=4 || serverResponse != 0) fatalError("Client protocol error 6");
+  }
+    
+  return 0;
+}
 
 // Implementa nuestro protocolo de comunicacion para mandar comandos, 
 // que sigue estos pasos:
@@ -80,22 +145,16 @@ int readCommandFromSocket(int socketFD, commandPacket *receivedCommand){
   if (write(socketFD,&response,4) == -1) fatalError("Server protocol error 4");
 
   // Si el parametro no es vacio, el servidor lee y responde
-  if (argLength != 0){
+  if (argLength != 1){
     receivedCommand->argument = (char *) malloc(argLength*sizeof(char)+1);
     n = read(socketFD,receivedCommand->argument,argLength);    
     write(socketFD,&response,4);
   }
-
-  //n = read(socketFD,&argLength,4);
-  //printf("%s %d\n",receivedCommand->argument,argLength);
-
-  //puts("El servidor termino");
+  
   return 0;
 }
 
-int sendCommandToSocket(int socketFD, commandPacket newCommand){
-  //puts("El cliente empieza");  
-    
+int sendCommandToSocket(int socketFD, commandPacket newCommand){  
   int serverResponse = 0;
   int argLength = strlen(newCommand.argument)+1;
   int n = 0;
@@ -123,13 +182,11 @@ int sendCommandToSocket(int socketFD, commandPacket newCommand){
 
   if (argLength != 1){
     if ( (n=write(socketFD,newCommand.argument,argLength)) == -1) fatalError("Client protocol error 5");
-    //printf("Se han mandado %d\n",n);
     // El cliente recibe respuesta final del servidor
     n = read(socketFD,&serverResponse,4);
     if (n!=4 || serverResponse != 0) fatalError("Client protocol error 6");
   }
-  
-  //puts("El cliente termino");
+    
   return 0;
 }
 
@@ -162,7 +219,7 @@ char *readResponseFromServer(int socketFD){
     write(socketFD,&allGood,4);
   }
 
-  return 0;
+  return answer;
 }
 
 int sendResponseToClient(int socketFD, char *answer){

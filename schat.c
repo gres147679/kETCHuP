@@ -76,12 +76,16 @@ void * serveClient(void *args){
   struct sockaddr_in *clientAddress = (struct sockaddr_in *)(argArray[4]);
   int *newClientSocketFDPointer = (int *)argArray[5];
   int newClientSocketFD = *newClientSocketFDPointer;
+  int userIndex = (int)argArray[6];
   
   char buffer[170];
   char command[4];
   command[3]='\0';
   int heartBeat;
   
+  char *response;
+
+
   while( read(newClientSocketFD,&heartBeat,4)>0 ){
     commandPacket myCommand;
     readCommandFromSocket(newClientSocketFD,&myCommand);
@@ -95,8 +99,9 @@ void * serveClient(void *args){
 	//Llamada a implementación de sal
     }
     else if ( strcmp(command,"usu") == 0 ){
-	printf("Mandaste usu\n");
-	listUsers(&globalUserList,newClientSocketFD);
+    	printf("Mandaste usu\n");
+    	response = listUsers(&globalUserList,newClientSocketFD);
+      sendResponseToClient(newClientSocketFD,response);
     }
     else if ( strcmp(command,"men") == 0 ){
 	printf("Mandaste men\n");
@@ -133,13 +138,13 @@ void waitForConnections(int serverSocketFD){
   struct sockaddr_in clientAddress;
   int clientAddresslength;
   int newClientSocketFD;
-  char user [20];
+  char *username;
 
   /*Servidor*/
     
     // Se crea la estructura de argumentos para los threads
     void **argList;
-    argList = (void *) malloc(6*sizeof(int));
+    argList = (void *) malloc(7*sizeof(int));
     argList[0] = &globalUserList;
     argList[1] = &globalUserListMutex;
     argList[2] = &chatRoomsList;
@@ -149,12 +154,15 @@ void waitForConnections(int serverSocketFD){
     int userCount = 0;
   
     while((newClientSocketFD = accept(serverSocketFD, (struct sockaddr *) &clientAddress, &clientAddresslength)) >= 0) {
+        // Se lee el nombre de usuario
+        receiveHello(newClientSocketFD,&username);
         //Se agrega el usuario a la lista de usuarios del chat
-        snprintf(user, sizeof(user), "%i", newClientSocketFD);
-        addUser(&globalUserList, user, newClientSocketFD);
+        addUser(&globalUserList, username, newClientSocketFD);
         
         argList[4] = &clientAddress;
         argList[5] = &newClientSocketFD;
+        argList[6] = (void *)userCount;
+
         
         pthread_create(&tidList[userCount++],NULL,&serveClient,argList);
         

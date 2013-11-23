@@ -6,6 +6,15 @@
 
 
 char *listUsers(userList *globalUserList, int clientSocketFD){
+	char *totalString;
+
+	if (globalUserList->size == 0) {
+		char *mensaje = "No hay usuarios conectados\n";
+		totalString = (char *) malloc(strlen(mensaje)*sizeof(char)+1);
+		strcpy(totalString,mensaje);
+		return totalString;
+	}
+
 	// Longitud total del string
 	int totalLength = 1;
 
@@ -16,7 +25,7 @@ char *listUsers(userList *globalUserList, int clientSocketFD){
 		totalLength += strlen(act->username)+1;
 		act = act->sig;
 	}
-	char *totalString = (char *) malloc(totalLength *sizeof(char));
+	totalString = (char *) malloc(totalLength *sizeof(char));
 
 	// Ahora se itera otra vez, concatenando los strings
 	act = globalUserList -> head;
@@ -24,6 +33,8 @@ char *listUsers(userList *globalUserList, int clientSocketFD){
 	strcpy(totalString,act->username);
 	totalString[currentLength]='\n';
 	act = act->sig;
+	
+
 
 	
 	char *currentString;
@@ -36,7 +47,6 @@ char *listUsers(userList *globalUserList, int clientSocketFD){
 		act = act->sig;
 	}
 
-	puts(totalString);
 	return totalString;
 }
 

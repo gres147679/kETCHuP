@@ -138,6 +138,9 @@ int main (int argc, char **argv){
               sizeof(serverAddress)) < 0)
     fatalError("can't connect to server");
 
+  // El cliente manda el nombre de usuario primero
+  sayHello(clientSocketFD,username);
+
   
   /* Copy input to the server. */
   if (strlen(filename) != 0){
@@ -153,6 +156,7 @@ int main (int argc, char **argv){
 	size_t bufferSize = 0;
         int n;
 	int lineLength;
+  char *response;
 	
 	commandPacket newCommand;
         while ( !feof(input) ){
@@ -164,9 +168,9 @@ int main (int argc, char **argv){
 	    }
 	    
 	    if (getCommandFromLine(&newCommand,buffer)!=-1){
-    		puts(newCommand.command);
-    		//puts(newCommand.argument);
     		sendCommandToSocket(clientSocketFD,newCommand);
+        response = readResponseFromServer(clientSocketFD);
+        puts(response);
 	    }
 	    
 	    free(buffer);

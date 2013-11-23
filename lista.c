@@ -14,6 +14,7 @@ Lista enlazada simple de userBox
 #include <pthread.h>
 #include "lista.h"
 
+//Metodos de la lista de usuarios
 void initialize(userList *lista){
     lista->head = NULL;
     lista->tail = NULL;
@@ -28,7 +29,8 @@ void addUser(userList *lista,char *nombreUsuario, int clientSocketFD){
       perror("malloc");
 
     // Rellenamos la caja
-    newu->username = nombreUsuario;
+    newu->username = (char *) malloc(strlen(nombreUsuario)*sizeof(char)+1);
+    strcpy(newu->username,nombreUsuario);
     newu->clientSocketFD = clientSocketFD;
     newu->sig = NULL;
 
@@ -80,6 +82,18 @@ void printList(userList lista){
     }
 }
 
+userBox getItem(userList lista,int index){
+    userBox *act;
+    act = lista.head;
+    int i;
+    for (i = 0; i < index && act != NULL; i++){
+        act = act->sig;
+    }
+
+    return *act;
+}
+
+//Metodos de la lista de salas de chat
 void initializeCRList(chatRoomList *list){
     list->head = NULL;
     list->tail = NULL;
@@ -157,6 +171,7 @@ void printCRList(chatRoomList list){
     }
 }
 
+//Metodos de la lista de threads
 void addThread(threadList *list,pthread_t thread){
     // Creamos la nueva caja de la lista
     threadBox *newt;
