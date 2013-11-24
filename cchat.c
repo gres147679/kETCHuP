@@ -71,6 +71,7 @@ int main (int argc, char **argv){
 
   // Se genera un username random por defecto
   char username[20] = "usuario";
+  srand(time(NULL));
   int randNum = rand() % 100000;
   char rand[5];
   snprintf(rand, 5, "%d", randNum);
@@ -140,7 +141,6 @@ int main (int argc, char **argv){
 
   // El cliente manda el nombre de usuario primero
   sayHello(clientSocketFD,username);
-
   
   /* Copy input to the server. */
   if (strlen(filename) != 0){

@@ -3,11 +3,15 @@
 
 char *listUsers(userList *globalUserList, int clientSocketFD);
 
-int listChatrooms(chatRoomList *chatList, int clientSocketFD);
+char *listChatrooms(chatRoomList *chatList, int clientSocketFD);
 
-int createChatroom(userList *globalUserList, chatRoomList *chatList, char *owner, char *roomName);
+int createChatroom(chatRoomList *chatList, char *roomName, char *owner, int ownerSocketFD);
 
 int deleteChatroom(chatRoomList *chatList, char *roomName, char *username);
+
+int subscribeUser(chatRoomList *list, char *chatRoom, char * newUser, int clientSocketFD);
+
+int unsubscribeUser(chatRoomList *list, char * username, int clientSocketFD);
 // sendMessage
 //         -subscribeUser
 //         -desubscribeUser

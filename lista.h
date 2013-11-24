@@ -29,7 +29,6 @@ typedef struct userList{
 //Estructuras para listas de salas de chat
 typedef struct chatRooms{
     char *chatRoomName;
-    //pthread_t chatThread;
     userList users;
     struct chatRooms *next;
 } chatRooms;
@@ -55,21 +54,23 @@ typedef struct threadList{
 //Metodos de lista de usuarios
 void initialize(userList *lista);
 
-void addUser(userList *lista,char *nombreUsuario, int clientSocketFD);
+int addUser(userList *lista,char *nombreUsuario, int clientSocketFD);
 
 void removeUser(userList *lista, char *username);
 
 void printList(userList lista);
 
+userBox getItem(userList lista,int index);
+
 //Metodos de lista de salas de chat
 
 void initializeCRList(chatRoomList *list);
 
-void addChatRoom(chatRoomList *list, chatRooms *newChatRoom);
+void addChatRoom(chatRoomList *list, char *nombre);
 
-void removeChatRoom(chatRoomList *list, char *chatRoom);
+int removeChatRoom(chatRoomList *list, char *chatRoom, char *username);
 
-void addUserToCRList(chatRoomList *list, char *chatRoom, char * newUser, int clientSocketFD);
+int addUserToCRList(chatRoomList *list, char *chatRoom, char * newUser, int clientSocketFD);
 
 void removeUserFromCRList(chatRoomList *list, char* username);
 

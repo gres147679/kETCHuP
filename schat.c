@@ -42,11 +42,14 @@ pthread_mutex_t chatRoomsListMutex = PTHREAD_MUTEX_INITIALIZER;
 // Arreglo de TIDs. Debe ser UNA LISTA
 pthread_t tidList[512];
 
-int initializeServer(int serverPort,int serverQueueLength){
+int initializeServer(int serverPort,int serverQueueLength, char *defaultChatName){
   int serverSocketFD, newClientSocketFD;  
   struct sockaddr_in serverAddress;
   
-  //int pid;      LO PONGO COMENTADO PORQUE NO SE SI USAREMOS HILOS O PROCESOS
+  // Creo la sala por defecto
+  initializeCRList(&chatRoomsList);
+  addChatRoom(&chatRoomsList,defaultChatName);
+
   
   /*Abrir el socket*/
   serverSocketFD = socket(PF_INET, SOCK_STREAM,0);
@@ -73,17 +76,32 @@ int initializeServer(int serverPort,int serverQueueLength){
 void * serveClient(void *args){
   // Argumentos
   void **argArray = (void **) args;
-  struct sockaddr_in *clientAddress = (struct sockaddr_in *)(argArray[4]);
-  int *newClientSocketFDPointer = (int *)argArray[5];
+  struct sockaddr_in *clientAddress = (struct sockaddr_in *)(argArray[0]);
+  int *newClientSocketFDPointer = (int *)argArray[1];
   int newClientSocketFD = *newClientSocketFDPointer;
-  int userIndex = (int)argArray[6];
+  int userIndex = (int)argArray[2];
+  char *username = (char *)argArray[3];
+
+  // Lista de salas a las que el usuario esta suscrito
+  // char **currentChats;
+  // int chats = 1;
+  // currentChats = (char **) malloc(10*sizeof(char*));
+  // currentChats[0] = (char *) malloc(7*sizeof(char));
+  // currentChats[0] = "actual";
   
   char buffer[170];
   char command[4];
   command[3]='\0';
   int heartBeat;
+  int operationComplete;
   
   char *response;
+
+  // Se agrega el usuario a la sala por defecto
+
+  pthread_mutex_lock(&chatRoomsListMutex);
+  addUserToCRList(&chatRoomsList,"actual", username, newClientSocketFD);
+  pthread_mutex_unlock(&chatRoomsListMutex);
 
 
   while( read(newClientSocketFD,&heartBeat,4)>0 ){
@@ -95,35 +113,66 @@ void * serveClient(void *args){
 
     // Definición de los comandos
     if ( strcmp(command,"sal") == 0 ){
-	printf("Mandaste sal\n");
-	//Llamada a implementación de sal
+    	printf("Mandaste sal\n");
+    	pthread_mutex_lock(&chatRoomsListMutex);
+      response = listChatrooms(&chatRoomsList,newClientSocketFD);
+      pthread_mutex_unlock(&chatRoomsListMutex);
+
+      sendResponseToClient(newClientSocketFD,response);
     }
     else if ( strcmp(command,"usu") == 0 ){
     	printf("Mandaste usu\n");
+
+      pthread_mutex_lock(&globalUserListMutex);
     	response = listUsers(&globalUserList,newClientSocketFD);
+      pthread_mutex_unlock(&globalUserListMutex);
+
       sendResponseToClient(newClientSocketFD,response);
     }
     else if ( strcmp(command,"men") == 0 ){
 	printf("Mandaste men\n");
 	//Llamada a implementación de usu
     }
+
     else if ( strcmp(command,"sus") == 0 ){
-	printf("Mandaste sus\n");
-	//Llamada a implementación de sus
+    	printf("Mandaste sus\n");
+      pthread_mutex_lock(&chatRoomsListMutex);
+      subscribeUser(&chatRoomsList,myCommand.argument, username,newClientSocketFD);
+      pthread_mutex_unlock(&chatRoomsListMutex);
     }
+
     else if ( strcmp(command,"des") == 0 ){
-	printf("Mandaste des\n");
-	//Llamada a implementación de des
+      printf("Mandaste des\n");
+      unsubscribeUser(&chatRoomsList, username,newClientSocketFD);
     }
+
     else if ( strcmp(command,"cre") == 0 ){
-	printf("Mandaste cre con argumento %s\n",myCommand.argument);
-	
-	//Llamada a implementación de cre
+    	printf("Mandaste cre con argumento %s\n",myCommand.argument);
+    	//Llamada a implementación de cre
+      pthread_mutex_lock(&chatRoomsListMutex);
+      operationComplete = createChatroom(&chatRoomsList,myCommand.argument, username, newClientSocketFD);
+      pthread_mutex_unlock(&chatRoomsListMutex);
+
+      if(operationComplete == 0) sendResponseToClient(
+        newClientSocketFD,"La sala fue creada exitosamente");
+      else sendResponseToClient(
+        newClientSocketFD,"Ya existe unsa sala con ese nombre");
     }
+
     else if ( strcmp(command,"eli") == 0 ){
-	printf("Mandaste eli\n");
-	//Llamada a implementación de eli
+    	printf("Mandaste eli\n");
+    	pthread_mutex_lock(&chatRoomsListMutex);
+      operationComplete = deleteChatroom(&chatRoomsList,myCommand.argument, username);
+      pthread_mutex_unlock(&chatRoomsListMutex);
+
+      if(operationComplete == 0) sendResponseToClient(
+        newClientSocketFD,"La sala fue eliminada exitosamente");
+      else if (operationComplete == -1) sendResponseToClient(
+        newClientSocketFD,"No se puede eliminar la sala por defecto");
+      else sendResponseToClient(
+        newClientSocketFD,"Para eliminar la sala debes ser el dueño");  
     }
+
     else if ( strcmp(command,"fue") == 0 ){
 	printf("Mandaste fue\n");
     }else{
@@ -144,12 +193,8 @@ void waitForConnections(int serverSocketFD){
     
     // Se crea la estructura de argumentos para los threads
     void **argList;
-    argList = (void *) malloc(7*sizeof(int));
-    argList[0] = &globalUserList;
-    argList[1] = &globalUserListMutex;
-    argList[2] = &chatRoomsList;
-    argList[3] = &chatRoomsListMutex;
-    
+    argList = (void *) malloc(4*sizeof(int));
+
     // Cantidad de clientes
     int userCount = 0;
   
@@ -159,9 +204,10 @@ void waitForConnections(int serverSocketFD){
         //Se agrega el usuario a la lista de usuarios del chat
         addUser(&globalUserList, username, newClientSocketFD);
         
-        argList[4] = &clientAddress;
-        argList[5] = &newClientSocketFD;
-        argList[6] = (void *)userCount;
+        argList[0] = &clientAddress;
+        argList[1] = &newClientSocketFD;
+        argList[2] = (void *)userCount;
+        argList[3] = (void *)username;
 
         
         pthread_create(&tidList[userCount++],NULL,&serveClient,argList);
@@ -179,7 +225,7 @@ main(int argc, char *argv[]){
 
   // Variables de ejecución del cliente, que se setean según CLI
   int port;
-  char chatRoom[100] = "default";
+  char chatRoom[100] = "actual";
 
 
   opterr = 0;
@@ -210,7 +256,7 @@ main(int argc, char *argv[]){
    printf ("No es una opción: %s\n", argv[index]);
   
   initialize(&globalUserList);
-  int serverSocketFD = initializeServer(PORT,QUEUELENGTH);
+  int serverSocketFD = initializeServer(PORT,QUEUELENGTH,chatRoom);
 
   waitForConnections(serverSocketFD);
   return 0;

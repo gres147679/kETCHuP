@@ -21,7 +21,7 @@ void initialize(userList *lista){
     lista->size = 0;
 }
 
-void addUser(userList *lista,char *nombreUsuario, int clientSocketFD){
+int addUser(userList *lista,char *nombreUsuario, int clientSocketFD){
     // Creamos la nueva caja de la lista
     userBox *newu;
     newu = (userBox *) malloc (sizeof(userBox));
@@ -38,10 +38,18 @@ void addUser(userList *lista,char *nombreUsuario, int clientSocketFD){
     if (lista->size==0){
         lista->head=newu;
         lista->tail=newu;
+        ++lista->size;
     }
     else{
+        userBox *actual = lista->head;
+        while (actual != NULL){
+            if (strcmp(actual->username,nombreUsuario) == 0) return -1;
+            actual = actual->sig;
+        }
+
         lista->tail->sig = newu;
         lista->tail = newu;
+        return 0;
     }
 
     // Incremento el tamaño de la lista
@@ -54,15 +62,18 @@ void removeUser(userList *lista, char *username){
     
     if (strcmp(act->username,username) == 0){
         lista->head = lista->head->sig;
+        --lista->size;
     }else{
         while (act->sig != NULL){
             char *usernameSiguiente = act->sig->username;
+            puts(usernameSiguiente);
             if ( strcmp(usernameSiguiente,username)==0 ) break;
             act = act->sig;
         }
 
         if (act->sig != NULL){
             act->sig = act->sig->sig;
+            --lista->size;
         }
     }
 }
@@ -100,7 +111,15 @@ void initializeCRList(chatRoomList *list){
     list->size = 0;
 }
 
-void addChatRoom(chatRoomList *list, chatRooms *newChatRoom){
+void addChatRoom(chatRoomList *list, char *nombre){
+    chatRooms *newChatRoom = (chatRooms *) malloc(sizeof(chatRooms));
+    if (newChatRoom==NULL)
+        perror("malloc");
+
+    newChatRoom->chatRoomName = nombre;
+    initialize( (userList *)&(newChatRoom->users) );
+
+
     // Si la lista está vacía
     if (list->size==0){
         list->head=newChatRoom;
@@ -115,10 +134,11 @@ void addChatRoom(chatRoomList *list, chatRooms *newChatRoom){
     ++list->size;
 }
 
-void removeChatRoom(chatRoomList *list, char *chatRoom){
+int removeChatRoom(chatRoomList *list, char *chatRoom, char *username){
     chatRooms *act;
     act = list->head;
-    
+     if (strcmp(chatRoom, "actual")== 0) return -1;
+
     if (strcmp(act->chatRoomName,chatRoom) == 0){
         list->head = list->head->next;
     }else{
@@ -128,32 +148,39 @@ void removeChatRoom(chatRoomList *list, char *chatRoom){
             act = act->next;
         }
 
-        if (act->next != NULL){
+        char *owner = act->next->users.head->username;
+        if (strcmp(owner,username)== 0){
             act->next = act->next->next;
+            return 0;
+        }else{
+            return -2;
         }
     }
+
+    return 0;
 }
 
-void addUserToCRList(chatRoomList *list, char *chatRoom, char * newUser, int clientSocketFD){
+int addUserToCRList(chatRoomList *list, char *chatRoom, char * newUser, int clientSocketFD){
     chatRooms *act;
     act = list->head;
-    while (act->next != NULL){
+    while (act != NULL){
         if (strcmp(act->chatRoomName,chatRoom) == 0){
-            addUser(&(act->users),newUser, clientSocketFD);
-            break;
+            return addUser(&(act->users),newUser, clientSocketFD);
         }else{
             act = act->next;
         }
     }
+    return -2;
 }
 
 void removeUserFromCRList(chatRoomList *list, char* username){
     chatRooms *act;
     act = list->head;
-    userList actUsers;
-    while (act->next != NULL){
-        actUsers = act->users;
-        removeUser(&actUsers,username);
+    userList *actUsers;
+    while (act != NULL){
+        actUsers = &(act->users);
+        removeUser(actUsers,username);
+        act = act->next;
     }
 }
 
