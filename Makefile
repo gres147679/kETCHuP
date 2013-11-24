@@ -28,7 +28,7 @@ sclient : schat.c socketManagement.o errors.o serverCommands.o lista.o
 	$(CC) $(CFLAGS) -o schat -pthread schat.c errors.o socketManagement.o serverCommands.o lista.o $(LIBS)
 
 cclient : cchat.c errors.o
-	$(CC) $(CFLAGS) -o cchat cchat.c errors.o socketManagement.o $(LIBS)
+	$(CC) $(CFLAGS) -o cchat -pthread cchat.c errors.o socketManagement.o $(LIBS)
 
 clean:
 	rm *.o schat cchat

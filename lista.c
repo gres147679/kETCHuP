@@ -59,6 +59,8 @@ int addUser(userList *lista,char *nombreUsuario, int clientSocketFD){
 void removeUser(userList *lista, char *username){
     userBox *act;
     act = lista->head;
+
+    if (act == NULL) return;
     
     if (strcmp(act->username,username) == 0){
         lista->head = lista->head->sig;
