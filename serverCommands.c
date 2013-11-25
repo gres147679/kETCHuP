@@ -25,15 +25,20 @@ char *listUsers(userList *globalUserList, int clientSocketFD){
 		totalLength += strlen(act->username)+1;
 		act = act->sig;
 	}
-	totalString = (char *) malloc(totalLength *sizeof(char));
+	
+
+	char *mensaje = "La lista de usuarios es:\n";
+	int currentLength = strlen(mensaje);
+	totalString = (char *) malloc((currentLength+totalLength)*sizeof(char));
+	strcpy(totalString,mensaje);
+	
 
 	// Ahora se itera otra vez, concatenando los strings
 	act = globalUserList -> head;
-	int currentLength = strlen(act->username);
-	strcpy(totalString,act->username);
-	totalString[currentLength]='\n';
-	totalString[currentLength+1]='\0';
-	act = act->sig;
+	// strcpy(totalString,act->username);
+	// totalString[currentLength]='\n';
+	// totalString[currentLength+1]='\0';
+	// act = act->sig;
 		
 	char *currentString;
 
@@ -41,8 +46,9 @@ char *listUsers(userList *globalUserList, int clientSocketFD){
 		currentString = act->username;
 		currentLength += strlen(currentString)+1;
 		strcat(totalString,currentString);
-		totalString[currentLength]='\n';
+		totalString[currentLength-2]='\n';
 		act = act->sig;
+
 	}
 
 	return totalString;
@@ -68,23 +74,25 @@ char *listChatrooms(chatRoomList *chatRoomsList, int clientSocketFD){
 		totalLength += strlen(act->chatRoomName)+1;
 		act = act->next;
 	}
-	totalString = (char *) malloc(totalLength *sizeof(char));
+
+	char *mensaje = "La lista de salas es:\n";
+	int currentLength = strlen(mensaje);
+	printf("%d\n",currentLength);
+	totalString = (char *) malloc((currentLength+totalLength)*sizeof(char));
+	strcpy(totalString,mensaje);
 
 	// Ahora se itera otra vez, concatenando los strings
 	act = chatRoomsList-> head;
-	int currentLength = strlen(act->chatRoomName);
-	strcpy(totalString,act->chatRoomName);
-	totalString[currentLength]='\n';
-	totalString[currentLength+1]='\0';
-	act = act->next;
 	
 	char *currentString;
 
 	while (act != NULL){
 		currentString = act->chatRoomName;
+		printf("%d\n",strlen(currentString));
 		currentLength += strlen(currentString)+1;
 		strcat(totalString,currentString);
-		totalString[currentLength]='\n';
+		totalString[currentLength-1]='\n';
+		//totalString[currentLength+1]='\0';
 		act = act->next;
 	}
 
@@ -120,4 +128,26 @@ int unsubscribeUser(chatRoomList *list, char * username,int clientSocketFD){
 	removeUserFromCRList(list,username);
 	sendResponseToClient(
         clientSocketFD,"Te has desuscrito de todas las salas");
+}
+
+void sendMessageToChatRooms(chatRoomList *list, char * username, char *message){
+	chatRooms *act;
+	act = list->head;
+	userList *currentUsers;
+	while (act != NULL){
+		currentUsers = &act->users;
+		if (isIn(*currentUsers,username))
+			sendMessageToUsers(currentUsers, message);
+		act = act->next;
+	}
+}
+
+void sendMessageToUsers(userList *destinations, char *message){
+	userBox *act;
+	act = destinations->head;
+	while(act != NULL){
+		sendResponseToClient(act->clientSocketFD, message);
+		act = act -> sig;
+	}
+	
 }

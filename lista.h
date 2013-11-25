@@ -62,6 +62,8 @@ void printList(userList lista);
 
 userBox getItem(userList lista,int index);
 
+int isIn(userList list, char *username);
+
 //Metodos de lista de salas de chat
 
 void initializeCRList(chatRoomList *list);
@@ -73,6 +75,8 @@ int removeChatRoom(chatRoomList *list, char *chatRoom, char *username);
 int addUserToCRList(chatRoomList *list, char *chatRoom, char * newUser, int clientSocketFD);
 
 void removeUserFromCRList(chatRoomList *list, char* username);
+
+userList *getDestinations(chatRooms *chatRoom, char *chatRoomName, char * username);
 
 void printCRList(chatRoomList list);
 

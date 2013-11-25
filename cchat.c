@@ -27,6 +27,8 @@
 // con el comando y su argumento, sólo si son comandos válidos. De lo contrario,
 // retorna -1
 
+pthread_mutex_t serverMutex = PTHREAD_MUTEX_INITIALIZER;
+
 int getCommandFromLine(commandPacket *newCommand,char *line){
     newCommand->command[3]='\0';
     size_t lineLength = strlen(line);
@@ -38,7 +40,6 @@ int getCommandFromLine(commandPacket *newCommand,char *line){
     	if ( !strcmp(line,"men") || !strcmp(line,"sus") || !strcmp(line,"cre")
     	|| !strcmp(line,"eli") ){    
   	    strncpy(newCommand->command,line,3);
-  	    
   	    newCommand->argument = (char *) malloc ((lineLength-4)*sizeof(char));
   	    strncpy(newCommand->argument,line+4,lineLength-4);	    
   	    return 0;
@@ -116,6 +117,7 @@ int initializeClient(int *clientSocketFD,int port,char *host,char *username, cha
             sendCommandToSocket(*clientSocketFD,newCommand);
             response = readResponseFromServer(*clientSocketFD);
             puts(response);
+            printf("*********************************************************\n");
           }
             
           free(buffer);
@@ -147,8 +149,11 @@ void * executeShell(void *args){
 
       if(strcmp("fue",newCommand.command)==0) break;
 
+      //pthread_mutex_lock(&serverMutex);
       sendCommandToSocket(clientSocketFD,newCommand);
       response = readResponseFromServer(clientSocketFD);
+      //pthread_mutex_unlock(&serverMutex);
+      printf("*********************************************************\n");
       puts(response);
     }
       
@@ -217,10 +222,20 @@ int main (int argc, char **argv){
   int clientSocketFD;
   pthread_t serverThread;
   int getShell = initializeClient(&clientSocketFD,port,host,username,filename);
+
   
 
   // Se crea un thread que lee comandos por pantalla
   if (getShell) pthread_create(&serverThread,NULL,&executeShell,(void *)(&clientSocketFD));
-  while(1);
+
+  char *response;
+  while(1){
+    //if (pthread_mutex_trylock(&serverMutex)) continue;
+    //else{
+      //response = readResponseFromServer(clientSocketFD);
+      //pthread_mutex_unlock(&serverMutex);
+      //puts(response);
+    //}
+  }
 
 }

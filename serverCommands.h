@@ -12,6 +12,8 @@ int deleteChatroom(chatRoomList *chatList, char *roomName, char *username);
 int subscribeUser(chatRoomList *list, char *chatRoom, char * newUser, int clientSocketFD);
 
 int unsubscribeUser(chatRoomList *list, char * username, int clientSocketFD);
+
+void sendMessageToChatRooms(chatRoomList *list, char * username, char *message);
+
+void sendMessageToUsers(userList *destinations, char *message);
 // sendMessage
-//         -subscribeUser
-//         -desubscribeUser

@@ -106,6 +106,17 @@ userBox getItem(userList lista,int index){
     return *act;
 }
 
+int isIn(userList list, char *username){
+    userBox *act;
+    act = list.head;
+    while(act != NULL){
+        if (strcmp(act->username, username)== 0) return 1;
+        act = act->sig;
+    }
+
+    return 0;
+}
+
 //Metodos de la lista de salas de chat
 void initializeCRList(chatRoomList *list){
     list->head = NULL;
@@ -184,6 +195,12 @@ void removeUserFromCRList(chatRoomList *list, char* username){
         removeUser(actUsers,username);
         act = act->next;
     }
+}
+
+userList *getDestinations(chatRooms *chatRoom, char *chatRoomName, char * username){
+    userList *destinations = &chatRoom->users;
+    if (isIn(*destinations, username)) return destinations;
+    return NULL;
 }
 
 void printCRList(chatRoomList list){
