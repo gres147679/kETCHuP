@@ -106,7 +106,9 @@ void * serveClient(void *args){
 
   while( read(newClientSocketFD,&heartBeat,4)>0 ){
     commandPacket myCommand;
+    pthread_mutex_lock(&chatRoomsListMutex);
     readCommandFromSocket(newClientSocketFD,&myCommand);
+    pthread_mutex_unlock(&chatRoomsListMutex);
     
     strncpy(command,myCommand.command,3);
 
@@ -129,9 +131,14 @@ void * serveClient(void *args){
 
       sendResponseToClient(newClientSocketFD,response);
     }
+
     else if ( strcmp(command,"men") == 0 ){
-	printf("Mandaste men\n");
-	//Llamada a implementación de usu
+    	printf("Mandaste men\n");
+      pthread_mutex_lock(&globalUserListMutex);
+      sendMessageToChatRooms(&chatRoomsList, username, myCommand.argument);
+      pthread_mutex_unlock(&globalUserListMutex);
+      sendResponseToClient(newClientSocketFD,"Tu mensaje fue enviado");
+    	//Llamada a implementación de usu
     }
 
     else if ( strcmp(command,"sus") == 0 ){
