@@ -53,17 +53,17 @@ int receiveHello(int socketFD, char **username){
 
   // El servidor lee el hola
   n = read(socketFD,&argLength,4);
-  if (n!=4) fatalError("Server protocol error 0");  
+  if (n!=4) fatalError("Hello Server protocol error 0");  
 
   // El servidor responde, para que el cliente mande la longitud del parametro
-  if (write(socketFD,&response,4) == -1) fatalError("Server protocol error 2");
+  if (write(socketFD,&response,4) == -1) fatalError("Hello Server protocol error 2");
 
   // El servidor lee la longitud
   n = read(socketFD,&argLength,4);
-  if (n!=4) fatalError("Server protocol error 3");  
+  if (n!=4) fatalError("Hello Server protocol error 3");  
 
   // El servidor responde, para que el cliente mande el parametro
-  if (write(socketFD,&response,4) == -1) fatalError("Server protocol error 4");
+  if (write(socketFD,&response,4) == -1) fatalError("Hello Server protocol error 4");
 
   // Si el parametro no es vacio, el servidor lee y responde
   if (argLength != 1){
@@ -120,7 +120,7 @@ int readCommandFromSocket(int socketFD, commandPacket *receivedCommand){
   int n = 1;
   char command[4];
   int argLength;
-  int response = 0;
+  char response = 0;
 
   // El servidor lee el hola
   //n = read(socketFD,&argLength,4);
@@ -134,7 +134,7 @@ int readCommandFromSocket(int socketFD, commandPacket *receivedCommand){
   }
 
   // El servidor responde, para que el cliente mande la longitud del parametro
-  if (write(socketFD,&response,4) == -1) fatalError("Server protocol error 2");
+  if (write(socketFD,&response,1) == -1) fatalError("Server protocol error 2");
 
   // El servidor lee la longitud
   n = read(socketFD,&argLength,4);
@@ -142,49 +142,56 @@ int readCommandFromSocket(int socketFD, commandPacket *receivedCommand){
   //printf("La longitud es %d\n",argLength);
 
   // El servidor responde, para que el cliente mande el parametro
-  if (write(socketFD,&response,4) == -1) fatalError("Server protocol error 4");
+  if (write(socketFD,&response,1) == -1) fatalError("Server protocol error 4");
 
   // Si el parametro no es vacio, el servidor lee y responde
   if (argLength != 1){
     receivedCommand->argument = (char *) malloc(argLength*sizeof(char)+1);
     n = read(socketFD,receivedCommand->argument,argLength);    
-    write(socketFD,&response,4);
+    write(socketFD,&response,1);
   }
   
   return 0;
 }
 
-int sendCommandToSocket(int socketFD, commandPacket newCommand){  
-  int serverResponse = 0;
+int sendCommandToSocket(int socketFD, commandPacket newCommand, int *signaler){  
+  char serverResponse = 0;
   int argLength = strlen(newCommand.argument)+1;
   int n = 0;
 
   // El cliente dice hola
-  if (write(socketFD,&serverResponse,4) == -1) fatalError("Client protocol error 0");
+  if (write(socketFD,&serverResponse,1) == -1) fatalError("Client protocol error 0");
   
   // El cliente escribe el comando
   if (n=write(socketFD,newCommand.command,4) == -1) fatalError("Client protocol error 1");
 
   // El cliente espera la respuesta del servidor, para mandar
   // la longitud del parametro
-  n = read(socketFD,&serverResponse,4);
-  if (n!=4 || serverResponse != 0) {
-      fatalError("Client protocol error 2");
-  }
+  // n = read(socketFD,&serverResponse,4);
+  // if (n!=4 || serverResponse != 0) {
+  //     fatalError("Client protocol error 2");
+  // }
+  while (*signaler == 0);
+  *signaler = 0;
 
   // El cliente manda la longitud del parametro
   if (write(socketFD,&argLength,4) == -1) fatalError("Client protocol error 3");
   //printf("La longitud es %d\n",argLength);
 
   // El cliente espera la respuesta del servidor, para mandar el parametro
-  n = read(socketFD,&serverResponse,4);
-  if (n!=4 || serverResponse != 0) fatalError("Client protocol error 4");
+  // n = read(socketFD,&serverResponse,4);
+  // if (n!=4 || serverResponse != 0) fatalError("Client protocol error 4");
+  while (*signaler == 0);
+  *signaler = 0;
 
   if (argLength != 1){
     if ( (n=write(socketFD,newCommand.argument,argLength)) == -1) fatalError("Client protocol error 5");
     // El cliente recibe respuesta final del servidor
-    n = read(socketFD,&serverResponse,4);
-    if (n!=4 || serverResponse != 0) fatalError("Client protocol error 6");
+    // n = read(socketFD,&serverResponse,4);
+    // if (n!=4 || serverResponse != 0) fatalError("Client protocol error 6");
+    while (*signaler == 0);
+    *signaler = 0;
+
   }
     
   return 0;
@@ -245,9 +252,12 @@ char *readResponseFromServer(int socketFD){
 int sendResponseToClient(int socketFD, char *answer){
   //puts("El cliente empieza");  
     
-  int serverResponse = 0;
+  char serverResponse = 0;
   int answerLength = strlen(answer)+1;
   int n = 0;
+
+  // Mando el señalador
+  if (write(socketFD,&serverResponse,1) == -1) fatalError("Response sending error 1");
 
   // El servidor manda la longitud de la respuesta
   if (write(socketFD,&answerLength,4) == -1) fatalError("Response sending error 1");

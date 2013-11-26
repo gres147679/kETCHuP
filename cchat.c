@@ -23,11 +23,15 @@
 
 #define DEFAULTPORT 20226
 
+int signaler;
+
+pthread_mutex_t serverMutex = PTHREAD_MUTEX_INITIALIZER;
+
 // Dada una línea del archivo de entrada, la rutina rellena un commandPacket
 // con el comando y su argumento, sólo si son comandos válidos. De lo contrario,
 // retorna -1
 
-pthread_mutex_t serverMutex = PTHREAD_MUTEX_INITIALIZER;
+
 
 int getCommandFromLine(commandPacket *newCommand,char *line){
     newCommand->command[3]='\0';
@@ -114,7 +118,8 @@ int initializeClient(int *clientSocketFD,int port,char *host,char *username, cha
 
             if(strcmp("fue",newCommand.command)==0)return 0;
 
-            sendCommandToSocket(*clientSocketFD,newCommand);
+            sendCommandToSocket(*clientSocketFD,newCommand,&signaler);
+            puts("blablah");
             response = readResponseFromServer(*clientSocketFD);
             if (response != NULL) puts(response);
             else puts("PAJUOOOO");
@@ -151,7 +156,7 @@ void * executeShell(void *args){
       if(strcmp("fue",newCommand.command)==0) break;
 
       pthread_mutex_lock(&serverMutex);
-      sendCommandToSocket(clientSocketFD,newCommand);
+      sendCommandToSocket(clientSocketFD,newCommand,&signaler);
       response = readResponseFromServer(clientSocketFD);
       pthread_mutex_unlock(&serverMutex);
       printf("*********************************************************\n");
@@ -233,9 +238,19 @@ int main (int argc, char **argv){
   while(1){
     if (pthread_mutex_trylock(&serverMutex)) continue;
     else{
-      response = readResponseFromServer(clientSocketFD);
+      char lectura;
+      int n = read(clientSocketFD,&lectura,1);
+      if (lectura == 0){
+        puts("lo cambie");
+        signaler = 1;
+      }
+      else {
+        puts("bitch");
+        response = readResponseFromServer(clientSocketFD);
+        
+        if (response != NULL) puts(response);
+      }
       pthread_mutex_unlock(&serverMutex);
-      if (response != NULL) puts(response);
     }
   }
 

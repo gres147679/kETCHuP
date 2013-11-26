@@ -92,7 +92,7 @@ void * serveClient(void *args){
   char buffer[170];
   char command[4];
   command[3]='\0';
-  int heartBeat;
+  char heartBeat;
   int operationComplete;
   
   char *response;
@@ -104,7 +104,7 @@ void * serveClient(void *args){
   pthread_mutex_unlock(&chatRoomsListMutex);
 
 
-  while( read(newClientSocketFD,&heartBeat,4)>0 ){
+  while( read(newClientSocketFD,&heartBeat,1)>0 ){
     commandPacket myCommand;
     readCommandFromSocket(newClientSocketFD,&myCommand);
     

@@ -22,7 +22,7 @@ void copyDataToArray(int from, char *to) ;
 
 int readCommandFromSocket(int socketFD, commandPacket *receivedCommand);
 
-int sendCommandToSocket(int socketFD, commandPacket newCommand);
+int sendCommandToSocket(int socketFD, commandPacket newCommand,int *signaler);
 
 char *readResponseFromServer(int socketFD);
 
