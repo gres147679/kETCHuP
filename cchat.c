@@ -150,7 +150,10 @@ void * executeShell(void *args){
 
       if(strcmp("fue",newCommand.command)==0) break;
 
-      pthread_mutex_lock(&serverMutex);
+      int returno = 1;
+      while (returno != 0){
+        returno = pthread_mutex_trylock(&serverMutex);
+      }
       sendCommandToSocket(clientSocketFD,newCommand);
       response = readResponseFromServer(clientSocketFD);
       pthread_mutex_unlock(&serverMutex);
@@ -231,12 +234,14 @@ int main (int argc, char **argv){
 
   char *response;
   while(1){
-    if (pthread_mutex_trylock(&serverMutex)) continue;
-    else{
-      response = readResponseFromServer(clientSocketFD);
-      pthread_mutex_unlock(&serverMutex);
-      if (response != NULL) puts(response);
-    }
+    pthread_mutex_lock(&serverMutex);
+    response = readResponseFromServer(clientSocketFD);
+    //while (1){
+    if (pthread_mutex_unlock(&serverMutex) != 0) puts("no pude desbloquear");
+      //else break;
+    //}
+    if (response != NULL) puts(response);
+  
   }
 
 }
