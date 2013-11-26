@@ -61,8 +61,8 @@ int initializeServer(int serverPort,int serverQueueLength, char *defaultChatName
   /*Asociar el socket a una direccion*/
   bzero(&serverAddress, sizeof(serverAddress));
   serverAddress.sin_family = PF_INET;
-  serverAddress.sin_addr.s_addr = inet_addr("127.0.0.1");
-  //serverAddress.sin_addr.s_addr = htonl(INADDR_ANY);
+  //serverAddress.sin_addr.s_addr = inet_addr("127.0.0.1");
+  serverAddress.sin_addr.s_addr = htonl(INADDR_ANY);
   serverAddress.sin_port = htons(serverPort);
   if (bind(serverSocketFD, (struct sockaddr *) &serverAddress,
            sizeof(serverAddress)) != 0)

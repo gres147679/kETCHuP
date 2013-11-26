@@ -203,23 +203,43 @@ char *readResponseFromServer(int socketFD){
   int allGood = 0;
   char *answer;
 
-  
-  // El cliente lee la longitud
-  n = read(socketFD,&answerLength,4);
-  if (n!=4) fatalError("Response reading error 1");  
-  //printf("La longitud es %d\n",answerLength);
+  fd_set fdSet;
+  struct timeval timeout;
+  int rc, result;
 
-  // El cliente responde, para que el servidor mande el parametro
-  if (write(socketFD,&allGood,4) == -1) fatalError("Response reading error 2");
-
-  // Si la respuesta no es vacio, el cliente lee y responde
-  if (answerLength != 0){
-    answer = (char *) malloc(answerLength*sizeof(char));
-    n = read(socketFD,answer,answerLength);    
-    write(socketFD,&allGood,4);
+    /* Set time limit. */
+  timeout.tv_sec = 1;
+  timeout.tv_usec = 0;
+    /* Create a descriptor set containing our two sockets.  */
+  FD_ZERO(&fdSet);
+  FD_SET(socketFD, &fdSet);
+  rc = select(sizeof(fdSet)*4, &fdSet, NULL, NULL, &timeout);
+  if (rc==-1) {
+    fatalError("Error esperando mensajes");
+    return NULL;
   }
 
-  return answer;
+  result = 0;
+  if (rc >0 && FD_ISSET(socketFD, &fdSet)){
+    // El cliente lee la longitud
+    n = read(socketFD,&answerLength,4);
+    if (n!=4) fatalError("Response reading error 1");  
+    //printf("La longitud es %d\n",answerLength);
+
+    // El cliente responde, para que el servidor mande el parametro
+    if (write(socketFD,&allGood,4) == -1) fatalError("Response reading error 2");
+
+    // Si la respuesta no es vacio, el cliente lee y responde
+    if (answerLength != 0){
+      answer = (char *) malloc(answerLength*sizeof(char));
+      n = read(socketFD,answer,answerLength);    
+      write(socketFD,&allGood,4);
+    }
+    return answer;
+  }
+  else return NULL;
+  
+  
 }
 
 int sendResponseToClient(int socketFD, char *answer){

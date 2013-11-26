@@ -116,7 +116,8 @@ int initializeClient(int *clientSocketFD,int port,char *host,char *username, cha
 
             sendCommandToSocket(*clientSocketFD,newCommand);
             response = readResponseFromServer(*clientSocketFD);
-            puts(response);
+            if (response != NULL) puts(response);
+            else puts("PAJUOOOO");
             printf("*********************************************************\n");
           }
             
@@ -149,12 +150,12 @@ void * executeShell(void *args){
 
       if(strcmp("fue",newCommand.command)==0) break;
 
-      //pthread_mutex_lock(&serverMutex);
+      pthread_mutex_lock(&serverMutex);
       sendCommandToSocket(clientSocketFD,newCommand);
       response = readResponseFromServer(clientSocketFD);
-      //pthread_mutex_unlock(&serverMutex);
+      pthread_mutex_unlock(&serverMutex);
       printf("*********************************************************\n");
-      puts(response);
+      if (response != NULL) puts(response);
     }
       
     free(buffer);
@@ -230,12 +231,12 @@ int main (int argc, char **argv){
 
   char *response;
   while(1){
-    //if (pthread_mutex_trylock(&serverMutex)) continue;
-    //else{
-      //response = readResponseFromServer(clientSocketFD);
-      //pthread_mutex_unlock(&serverMutex);
-      //puts(response);
-    //}
+    if (pthread_mutex_trylock(&serverMutex)) continue;
+    else{
+      response = readResponseFromServer(clientSocketFD);
+      pthread_mutex_unlock(&serverMutex);
+      if (response != NULL) puts(response);
+    }
   }
 
 }
