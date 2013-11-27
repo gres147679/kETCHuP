@@ -23,8 +23,7 @@ void initialize(userList *lista){
 
 int addUser(userList *lista,char *nombreUsuario, int clientSocketFD){
     // Creamos la nueva caja de la lista
-    userBox *newu;
-    newu = (userBox *) malloc (sizeof(userBox));
+    userBox *newu = (userBox *) malloc (sizeof(userBox));
     if (newu==NULL) 
       perror("malloc");
 
@@ -128,27 +127,37 @@ void initializeCRList(chatRoomList *list){
     list->size = 0;
 }
 
-void addChatRoom(chatRoomList *list, char *nombre){
+int addChatRoom(chatRoomList *list, char *nombre, char *owner, int ownerSocketFD){
+    //Creamos la sala que se quiere agregar
     chatRooms *newChatRoom = (chatRooms *) malloc(sizeof(chatRooms));
     if (newChatRoom==NULL)
         perror("malloc");
 
-    newChatRoom->chatRoomName = nombre;
+    //Rellenamos los datos de la sala
+    newChatRoom->chatRoomName = (char *) malloc(strlen(nombre)*sizeof(char)+1);
+    strcpy(newChatRoom->chatRoomName,nombre);
     initialize( (userList *)&(newChatRoom->users) );
-
+    int creator = addUser(&(newChatRoom->users), owner, ownerSocketFD);
 
     // Si la lista está vacía
     if (list->size==0){
         list->head=newChatRoom;
         list->tail=newChatRoom;
+        ++list->size;
+        return 0;
     }
     else{
+        chatRooms*act = list->head;
+        while (act != NULL){
+            if (strcmp(act->chatRoomName,nombre)== 0) return -1;
+            act = act->next;
+        }
+        
         list->tail->next = newChatRoom;
         list->tail = newChatRoom;
+        ++list->size;
+        return 0;
     }
-
-    // Incremento el tamaño de la lista
-    ++list->size;
 }
 
 int removeChatRoom(chatRoomList *list, char *chatRoom, char *username){

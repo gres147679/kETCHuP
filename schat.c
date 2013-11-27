@@ -48,7 +48,7 @@ int initializeServer(int serverPort,int serverQueueLength, char *defaultChatName
   
   // Creo la sala por defecto
   initializeCRList(&chatRoomsList);
-  addChatRoom(&chatRoomsList,defaultChatName);
+  addChatRoom(&chatRoomsList,defaultChatName, "admin",-1);
 
   
   /*Abrir el socket*/
@@ -164,7 +164,7 @@ void * serveClient(void *args){
     	printf("Mandaste cre con argumento %s\n",myCommand.argument);
     	//Llamada a implementación de cre
       pthread_mutex_lock(&chatRoomsListMutex);
-      operationComplete = createChatroom(&chatRoomsList,myCommand.argument, username, newClientSocketFD);
+      createChatroom(&chatRoomsList,myCommand.argument, username, newClientSocketFD);
       pthread_mutex_unlock(&chatRoomsListMutex);
 
       if(operationComplete == 0) sendResponseToClient(

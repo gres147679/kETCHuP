@@ -69,7 +69,7 @@ int isIn(userList list, char *username);
 
 void initializeCRList(chatRoomList *list);
 
-void addChatRoom(chatRoomList *list, char *nombre);
+int addChatRoom(chatRoomList *list, char *nombre, char *owner, int ownerSocketFD);
 
 int removeChatRoom(chatRoomList *list, char *chatRoom, char *username);
 
