@@ -39,6 +39,7 @@ int addUser(userList *lista,char *nombreUsuario, int clientSocketFD){
         lista->head=newu;
         lista->tail=newu;
         ++lista->size;
+        return 0;
     }
     else{
         userBox *actual = lista->head;
@@ -49,11 +50,11 @@ int addUser(userList *lista,char *nombreUsuario, int clientSocketFD){
 
         lista->tail->sig = newu;
         lista->tail = newu;
+        // Incremento el tamaño de la lista
+        ++lista->size;
         return 0;
     }
-
-    // Incremento el tamaño de la lista
-    ++lista->size;
+ 
 }
 
 void removeUser(userList *lista, char *username){
@@ -154,6 +155,8 @@ int removeChatRoom(chatRoomList *list, char *chatRoom, char *username){
 
     if (strcmp(act->chatRoomName,chatRoom) == 0){
         list->head = list->head->next;
+        //here
+        --list->size;
     }else{
         while (act->next != NULL){
             char *nextChatRoom = act->next->chatRoomName;
@@ -164,6 +167,8 @@ int removeChatRoom(chatRoomList *list, char *chatRoom, char *username){
         char *owner = act->next->users.head->username;
         if (strcmp(owner,username)== 0){
             act->next = act->next->next;
+            //here
+            --list->size;
             return 0;
         }else{
             return -2;
