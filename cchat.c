@@ -155,10 +155,14 @@ void * executeShell(void *args){
         returno = pthread_mutex_trylock(&serverMutex);
       }
       sendCommandToSocket(clientSocketFD,newCommand);
-      response = readResponseFromServer(clientSocketFD);
+      while ((response = readResponseFromServer(clientSocketFD)) == NULL) ;
       pthread_mutex_unlock(&serverMutex);
       printf("*********************************************************\n");
-      if (response != NULL) puts(response);
+      puts(response);
+      // if (response != NULL) {
+      //   puts(response);
+      //   printf("CARACTER PRUEBA %d\n",response[0]);
+      // }
     }
       
     free(buffer);
@@ -182,6 +186,7 @@ int main (int argc, char **argv){
   char rand[5];
   snprintf(rand, 5, "%d", randNum);
   strcat(username,rand);
+  printf("Mi usuario es %s\n",username);
 
   // Archivo de entrada. Puede ser vacío
   //NOTA: creo que podriamos poner filename[] y asi no limitar la extension
@@ -235,12 +240,16 @@ int main (int argc, char **argv){
   char *response;
   while(1){
     pthread_mutex_lock(&serverMutex);
-    response = readResponseFromServer(clientSocketFD);
+    //puts("Viene el main");
+    response = fetchMessagesFromServer(clientSocketFD);
     //while (1){
     if (pthread_mutex_unlock(&serverMutex) != 0) puts("no pude desbloquear");
       //else break;
     //}
-    if (response != NULL) puts(response);
+    if (response != NULL) {
+      //puts("Soy yo");
+      puts(response);
+    }
   
   }
 

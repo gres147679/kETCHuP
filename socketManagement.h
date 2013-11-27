@@ -27,3 +27,7 @@ int sendCommandToSocket(int socketFD, commandPacket newCommand);
 char *readResponseFromServer(int socketFD);
 
 int sendResponseToClient(int socketFD, char *answer);
+
+char *fetchMessagesFromServer(int socketFD);
+
+int sendMessagesToClient(int socketFD, char *answer);

@@ -79,7 +79,6 @@ char *listChatrooms(chatRoomList *chatRoomsList, int clientSocketFD){
 
 	char *mensaje = "La lista de salas es:\n";
 	int currentLength = strlen(mensaje);
-	printf("%d\n",currentLength);
 	totalString = (char *) malloc((currentLength+totalLength)*sizeof(char));
 	strcpy(totalString,mensaje);
 
@@ -90,7 +89,6 @@ char *listChatrooms(chatRoomList *chatRoomsList, int clientSocketFD){
 
 	while (act != NULL){
 		currentString = act->chatRoomName;
-		printf("%d\n",(int)strlen(currentString));
 		currentLength += strlen(currentString)+1;
 		strcat(totalString,currentString);
 		totalString[currentLength-1]='\n';
@@ -133,8 +131,14 @@ void sendMessageToUsers(userList *destinations, char *message){
 	userBox *act;
 	act = destinations->head;
 	while(act != NULL){
+		//printf("A traves de %d\n",act->clientSocketFD);
+		//printf("Le estoy mandando a ");
+		//puts(act->username);
+		//puts("jaja");
 		pthread_mutex_lock(&act->userMutex);
-		sendResponseToClient(act->clientSocketFD, message);
+		//puts("jaja2");
+		if (act->clientSocketFD != -1) sendMessagesToClient(act->clientSocketFD, message);
+		//puts("Ya le mande");
 		pthread_mutex_unlock(&act->userMutex);
 		act = act -> sig;
 	}

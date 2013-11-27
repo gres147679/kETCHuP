@@ -110,7 +110,6 @@ void * serveClient(void *args){
   addUserToCRList(&chatRoomsList,"actual", username, newClientSocketFD);
   pthread_mutex_unlock(&chatRoomsListMutex);
 
-
   while( read(newClientSocketFD,&heartBeat,4)>0 ){
     commandPacket myCommand;
     pthread_mutex_lock(&myUser->userMutex);
@@ -150,6 +149,7 @@ void * serveClient(void *args){
       pthread_mutex_lock(&myUser->userMutex);
       sendResponseToClient(newClientSocketFD,"Tu mensaje fue enviado");
       pthread_mutex_unlock(&myUser->userMutex);
+      puts("Saliendo de men");
     }
 
     else if ( strcmp(command,"sus") == 0 ){
@@ -166,6 +166,7 @@ void * serveClient(void *args){
       else sendResponseToClient(
         newClientSocketFD,"La sala no existe. Puedes crearla usando el comando cre");
       pthread_mutex_unlock(&myUser->userMutex);
+      printf("El FD sus es %d\n",newClientSocketFD);
     }
 
     else if ( strcmp(command,"des") == 0 ){
@@ -239,6 +240,7 @@ void waitForConnections(int serverSocketFD){
         receiveHello(newClientSocketFD,&username);
         //Se agrega el usuario a la lista de usuarios del chat
         addUser(&globalUserList, username, newClientSocketFD);
+        printf("Se agrega el usuario %s con FD %d\n",username,newClientSocketFD);
         
         argList[0] = &clientAddress;
         argList[1] = &newClientSocketFD;

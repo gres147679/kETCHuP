@@ -116,6 +116,7 @@ int sayHello(int socketFD, char *username){
 // -)El cliente envia el parametro
 
 int readCommandFromSocket(int socketFD, commandPacket *receivedCommand){
+  //puts("LEYENDO COMANDO");
   int nBytesRead = 0;
   int n = 1;
   char command[4];
@@ -129,7 +130,7 @@ int readCommandFromSocket(int socketFD, commandPacket *receivedCommand){
   // El cliente manda el comando, y el servidor lo lee
   n = read(socketFD,&receivedCommand->command,4);
   if (n!=4) {
-    printf("%d\n",n);
+    //printf("%d\n",n);
     fatalError("Server protocol error 1");
   }
 
@@ -154,7 +155,8 @@ int readCommandFromSocket(int socketFD, commandPacket *receivedCommand){
   return 0;
 }
 
-int sendCommandToSocket(int socketFD, commandPacket newCommand){  
+int sendCommandToSocket(int socketFD, commandPacket newCommand){
+  //puts("MANDANDO COMANDO");
   int serverResponse = 0;
   int argLength = strlen(newCommand.argument)+1;
   int n = 0;
@@ -169,7 +171,7 @@ int sendCommandToSocket(int socketFD, commandPacket newCommand){
   // la longitud del parametro
   n = read(socketFD,&serverResponse,4);
   if (n!=4 || serverResponse != 0) {
-      printf("%d %d\n",n,serverResponse);
+      //printf("%d %d\n",n,serverResponse);
       fatalError("Client protocol error 2");
   }
 
@@ -187,7 +189,8 @@ int sendCommandToSocket(int socketFD, commandPacket newCommand){
     n = read(socketFD,&serverResponse,4);
     if (n!=4 || serverResponse != 0) fatalError("Client protocol error 6");
   }
-    
+  
+  //puts("YA NO MANDANDO COMANDO");
   return 0;
 }
 
@@ -199,6 +202,8 @@ int sendCommandToSocket(int socketFD, commandPacket newCommand){
 // recibio la respuesta
 
 char *readResponseFromServer(int socketFD){
+  //puts("LEYENDO RESPUESTA");
+
   int n = 1;
   int answerLength;
   int allGood = 0;
@@ -222,13 +227,20 @@ char *readResponseFromServer(int socketFD){
 
   result = 0;
   if (rc >0 && FD_ISSET(socketFD, &fdSet)){
+    //puts("LEYENDO RESPUESTA");
     // El cliente lee la longitud
     n = read(socketFD,&answerLength,4);
     if (n!=4) fatalError("Response reading error 1");  
+    //puts("wbeo");
+    //printf("%d\n",answerLength);
     //printf("La longitud es %d\n",answerLength);
 
+    int b;
     // El cliente responde, para que el servidor mande el parametro
-    if (write(socketFD,&allGood,4) == -1) fatalError("Response reading error 2");
+    if ((b=write(socketFD,&allGood,4)) == -1) fatalError("Response reading error 2");
+
+    //puts("wbeo2");
+    //printf("%d\n",b);
 
     // Si la respuesta no es vacio, el cliente lee y responde
     if (answerLength != 0){
@@ -244,6 +256,7 @@ char *readResponseFromServer(int socketFD){
 }
 
 int sendResponseToClient(int socketFD, char *answer){
+  //puts("Mando respuesta OJO");
   //puts("El cliente empieza");  
     
   int serverResponse = 0;
@@ -252,11 +265,14 @@ int sendResponseToClient(int socketFD, char *answer){
 
   // El servidor manda la longitud de la respuesta
   if (write(socketFD,&answerLength,4) == -1) fatalError("Response sending error 1");
-  //printf("La longitud es %d\n",argLength);
+  //printf("La longitud es %d\n",answerLength);
+  //puts("Mando respuesta OJO2");
+  //printf("%d\n",answerLength);
 
   // El servidor espera la respuesta del cliente, para mandar la respuesta
   n = read(socketFD,&serverResponse,4);
   if (n!=4 || serverResponse != 0) fatalError("Response sending error 2");
+  //puts("Mando respuesta OJO3");
 
   if (answerLength != 1){
     if ( (n=write(socketFD,answer,answerLength)) == -1) fatalError("Response sending error 3");
@@ -264,6 +280,75 @@ int sendResponseToClient(int socketFD, char *answer){
     // El cliente recibe respuesta final del servidor
     n = read(socketFD,&serverResponse,4);
     if (n!=4 || serverResponse != 0) fatalError("Response sending error 4");
+  }
+  
+  //puts("El cliente termino");
+  return 0;
+}
+
+// Envio y recepcion de mensajes
+
+char *fetchMessagesFromServer(int socketFD){
+  //puts("LEYENDO RESPUESTA");
+
+  int n = 1;
+  int answerLength;
+  int allGood = 0;
+  char *answer;
+
+  fd_set fdSet;
+  struct timeval timeout;
+  int rc, result;
+
+    /* Set time limit. */
+  timeout.tv_sec = 1;
+  timeout.tv_usec = 0;
+    /* Create a descriptor set containing our two sockets.  */
+  FD_ZERO(&fdSet);
+  FD_SET(socketFD, &fdSet);
+  rc = select(sizeof(fdSet)*4, &fdSet, NULL, NULL, &timeout);
+  if (rc==-1) {
+    fatalError("Error esperando mensajes");
+    return NULL;
+  }
+
+  result = 0;
+  if (rc >0 && FD_ISSET(socketFD, &fdSet)){
+    //puts("LEYENDO RESPUESTA");
+    // El cliente lee la longitud
+    n = read(socketFD,&answerLength,4);
+    if (n!=4) fatalError("Response reading error 1");  
+    //puts("wbeo");
+    //printf("%d\n",answerLength);
+    //printf("La longitud es %d\n",answerLength);
+
+    // Si la respuesta no es vacio, el cliente lee y responde
+    if (answerLength != 0){
+      answer = (char *) malloc(answerLength*sizeof(char));
+      n = read(socketFD,answer,answerLength);    
+    }
+    return answer;
+  }
+  else return NULL;
+  
+  
+}
+
+int sendMessagesToClient(int socketFD, char *answer){
+  int serverResponse = 0;
+  int answerLength = strlen(answer)+1;
+  int n = 0;
+
+  // El servidor manda la longitud de la respuesta
+  if (write(socketFD,&answerLength,4) == -1) fatalError("Response sending error 1");
+  //printf("La longitud es %d\n",answerLength);
+  //puts("Mando respuesta OJO2");
+  //printf("%d\n",answerLength);
+
+  if (answerLength != 1){
+    if ( (n=write(socketFD,answer,answerLength)) == -1) fatalError("Response sending error 3");
+    //printf("Se han mandado %d\n",n);
+    // El cliente recibe respuesta final del servidor
   }
   
   //puts("El cliente termino");
