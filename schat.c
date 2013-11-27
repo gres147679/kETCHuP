@@ -79,8 +79,15 @@ void * serveClient(void *args){
   struct sockaddr_in *clientAddress = (struct sockaddr_in *)(argArray[0]);
   int *newClientSocketFDPointer = (int *)argArray[1];
   int newClientSocketFD = *newClientSocketFDPointer;
-  int userIndex = (int)argArray[2];
+  int *userIndex = (int *)argArray[2];
+
   char *username = (char *)argArray[3];
+
+  //Inicializamos el mutex del usuario
+  userBox *myUser = getItem(globalUserList,*userIndex);
+  if (myUser == NULL) fatalError("No puedo obtener el mutex del usuario");
+  else pthread_mutex_init(&myUser->userMutex,NULL);
+
 
   // Lista de salas a las que el usuario esta suscrito
   // char **currentChats;
@@ -106,9 +113,9 @@ void * serveClient(void *args){
 
   while( read(newClientSocketFD,&heartBeat,4)>0 ){
     commandPacket myCommand;
-    pthread_mutex_lock(&chatRoomsListMutex);
+    pthread_mutex_lock(&myUser->userMutex);
     readCommandFromSocket(newClientSocketFD,&myCommand);
-    pthread_mutex_unlock(&chatRoomsListMutex);
+    pthread_mutex_unlock(&myUser->userMutex);
     
     strncpy(command,myCommand.command,3);
 
@@ -134,11 +141,11 @@ void * serveClient(void *args){
 
     else if ( strcmp(command,"men") == 0 ){
     	printf("Mandaste men\n");
-      pthread_mutex_lock(&globalUserListMutex);
       sendMessageToChatRooms(&chatRoomsList, username, myCommand.argument);
-      pthread_mutex_unlock(&globalUserListMutex);
+      
+      pthread_mutex_lock(&myUser->userMutex);
       sendResponseToClient(newClientSocketFD,"Tu mensaje fue enviado");
-    	//Llamada a implementación de usu
+      pthread_mutex_unlock(&myUser->userMutex);
     }
 
     else if ( strcmp(command,"sus") == 0 ){
@@ -213,7 +220,7 @@ void waitForConnections(int serverSocketFD){
         
         argList[0] = &clientAddress;
         argList[1] = &newClientSocketFD;
-        argList[2] = (void *)userCount;
+        argList[2] = (void *)&userCount;
         argList[3] = (void *)username;
 
         

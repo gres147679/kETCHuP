@@ -96,15 +96,18 @@ void printList(userList lista){
     }
 }
 
-userBox getItem(userList lista,int index){
+userBox *getItem(userList lista,int index){
     userBox *act;
     act = lista.head;
+    if (index == 0) return act;
+    else act = act->sig;
+
     int i;
-    for (i = 0; i < index && act != NULL; i++){
+    for (i = 1; i < index && act != NULL; i++){
         act = act->sig;
     }
 
-    return *act;
+    return act;
 }
 
 int isIn(userList list, char *username){

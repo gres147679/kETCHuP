@@ -2,6 +2,8 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <string.h>
+#include <pthread.h>
+
 #include "serverCommands.h"
 
 
@@ -88,7 +90,7 @@ char *listChatrooms(chatRoomList *chatRoomsList, int clientSocketFD){
 
 	while (act != NULL){
 		currentString = act->chatRoomName;
-		printf("%d\n",strlen(currentString));
+		printf("%d\n",(int)strlen(currentString));
 		currentLength += strlen(currentString)+1;
 		strcat(totalString,currentString);
 		totalString[currentLength-1]='\n';
@@ -146,7 +148,9 @@ void sendMessageToUsers(userList *destinations, char *message){
 	userBox *act;
 	act = destinations->head;
 	while(act != NULL){
+		pthread_mutex_lock(&act->userMutex);
 		sendResponseToClient(act->clientSocketFD, message);
+		pthread_mutex_unlock(&act->userMutex);
 		act = act -> sig;
 	}
 	

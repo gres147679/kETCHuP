@@ -17,6 +17,7 @@ Lista enlazada simple de userBox
 typedef struct userBox{
     char *username;
     int clientSocketFD;
+    pthread_mutex_t userMutex;
     struct userBox *sig;
 } userBox; 
 
@@ -60,7 +61,7 @@ void removeUser(userList *lista, char *username);
 
 void printList(userList lista);
 
-userBox getItem(userList lista,int index);
+userBox *getItem(userList lista,int index);
 
 int isIn(userList list, char *username);
 
