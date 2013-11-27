@@ -99,21 +99,20 @@ char *listChatrooms(chatRoomList *chatRoomsList, int clientSocketFD){
 	return totalString;
 }
 
-int createChatroom(chatRoomList *chatList, char *roomName, char *owner, int ownerSocketFD){
-	chatRooms *currentChat;
-	for(currentChat=chatList->head;currentChat!=NULL;currentChat=currentChat->next){
-		if(strcmp(currentChat->chatRoomName,roomName)==0) return -1;
-	}
-	addChatRoom(chatList,roomName);
-	addUserToCRList(chatList,roomName,owner,ownerSocketFD);
-	return 0;
+void createChatroom(chatRoomList *chatList, char *roomName, char *owner, int ownerSocketFD){
+        int operationComplete = addChatRoom(chatList, roomName, owner, ownerSocketFD);
+        
+        if (operationComplete == 0) sendResponseToClient(
+            ownerSocketFD, "La sala se ha creado exitosamente");
+        else if (operationComplete == -1) sendResponseToClient(
+            ownerSocketFD, "Ya existe una sala con este nombre");
 }
 
 int deleteChatroom(chatRoomList *chatList, char *roomName, char *username){
 	return removeChatRoom(chatList,roomName, username);
 }
 
-int subscribeUser(chatRoomList *list, char *chatRoom, char * newUser, int clientSocketFD){
+void subscribeUser(chatRoomList *list, char *chatRoom, char * newUser, int clientSocketFD){
 	int operationComplete = addUserToCRList(list,chatRoom,newUser,clientSocketFD);	
 
 	if(operationComplete == 0) sendResponseToClient(
