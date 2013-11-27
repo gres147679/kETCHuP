@@ -101,34 +101,20 @@ char *listChatrooms(chatRoomList *chatRoomsList, int clientSocketFD){
 	return totalString;
 }
 
-void createChatroom(chatRoomList *chatList, char *roomName, char *owner, int ownerSocketFD){
-        int operationComplete = addChatRoom(chatList, roomName, owner, ownerSocketFD);
-        
-        if (operationComplete == 0) sendResponseToClient(
-            ownerSocketFD, "La sala se ha creado exitosamente");
-        else if (operationComplete == -1) sendResponseToClient(
-            ownerSocketFD, "Ya existe una sala con este nombre");
+int createChatroom(chatRoomList *chatList, char *roomName, char *owner, int ownerSocketFD){
+    return addChatRoom(chatList, roomName, owner, ownerSocketFD);
 }
 
 int deleteChatroom(chatRoomList *chatList, char *roomName, char *username){
 	return removeChatRoom(chatList,roomName, username);
 }
 
-void subscribeUser(chatRoomList *list, char *chatRoom, char * newUser, int clientSocketFD){
-	int operationComplete = addUserToCRList(list,chatRoom,newUser,clientSocketFD);	
-
-	if(operationComplete == 0) sendResponseToClient(
-        clientSocketFD,"La suscripción se ha realizado con éxito");
-      else if (operationComplete == -1) sendResponseToClient(
-        clientSocketFD,"Ya estás suscrito a la sala");
-      else sendResponseToClient(
-        clientSocketFD,"La sala no existe. Puedes crearla usando el comando cre");
+int subscribeUser(chatRoomList *list, char *chatRoom, char * newUser, int clientSocketFD){
+	return addUserToCRList(list,chatRoom,newUser,clientSocketFD);	
 }
 
-int unsubscribeUser(chatRoomList *list, char * username,int clientSocketFD){
+void unsubscribeUser(chatRoomList *list, char * username,int clientSocketFD){
 	removeUserFromCRList(list,username);
-	sendResponseToClient(
-        clientSocketFD,"Te has desuscrito de todas las salas");
 }
 
 void sendMessageToChatRooms(chatRoomList *list, char * username, char *message){

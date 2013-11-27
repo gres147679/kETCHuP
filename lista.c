@@ -96,6 +96,7 @@ void printList(userList lista){
 }
 
 userBox *getItem(userList lista,int index){
+    printf("%d\n",index);
     userBox *act;
     act = lista.head;
     if (index == 0) return act;

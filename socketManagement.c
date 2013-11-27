@@ -169,6 +169,7 @@ int sendCommandToSocket(int socketFD, commandPacket newCommand){
   // la longitud del parametro
   n = read(socketFD,&serverResponse,4);
   if (n!=4 || serverResponse != 0) {
+      printf("%d %d\n",n,serverResponse);
       fatalError("Client protocol error 2");
   }
 
