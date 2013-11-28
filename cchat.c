@@ -1,11 +1,14 @@
-/****************************
- cchat.c
- 
- Andrea Balbás        09-10076
- Gustavo El Khoury    10-10226     
- 
- Septiembre - Diciembre 2013
- ****************************/
+/**
+ * cchat.c
+ *
+ * Septiembre - Diciembre 2013
+ *
+ * Manejo del cliente que se conecta al servidor
+ * para utilizar el servicio de chat
+ *
+ * @author Andrea Balbás        09-10076
+ * @author Gustavo El Khoury    10-10226
+ */
 #include <ctype.h>
 #include <unistd.h>
 #include <stdio.h>
@@ -23,12 +26,19 @@
 
 #define DEFAULTPORT 20226
 
-// Dada una línea del archivo de entrada, la rutina rellena un commandPacket
-// con el comando y su argumento, sólo si son comandos válidos. De lo contrario,
-// retorna -1
-
 pthread_mutex_t serverMutex = PTHREAD_MUTEX_INITIALIZER;
 
+ /**
+  * Dada una línea del archivo de entrada, se completan los datos de un
+  * commandPacket con el comando leido y su argumento.
+  * Si se trata de un comando válido, retorna 0.
+  * De lo contrario, retorna -1
+  * 
+  * @param newCommand Comando que se construye según la linea del archivo leida
+  * @param line Linea del archivo de entrada leida.
+  * @return 0 si el comando leído es válido. -1 en caso contrario
+  * 
+  */
 int getCommandFromLine(commandPacket *newCommand,char *line){
     newCommand->command[3]='\0';
     size_t lineLength = strlen(line);
@@ -62,23 +72,36 @@ int getCommandFromLine(commandPacket *newCommand,char *line){
     
 }
 
-
+ /**
+  * Conecta el cliente al servidor y envía el nombre de usuario del cliente.
+  * En caso de haber colocado un archivo de entrada de comandos, procesa el
+  * archivo, envía los comandos al servidor y muestra por salida estándar
+  * la respuesta obtenida. 
+  * 
+  * @param clientSocketFD Apuntador al socket del cliente
+  * @param port Puerto del servidor al que quiere conectarse el cliente
+  * @param host Nombre del servidor en el que desea conectarse el cliente
+  * @param username Nombre de usuario del cliente que se conecta al servidor
+  * @param filename Apuntador al nombre del archivo de entrada indicado
+  * @return 1 si la conexión se realizó exitosamente.
+  * 
+  */
 int initializeClient(int *clientSocketFD,int port,char *host,char *username, char *filename){
-    //int clientSocketFD;
+
     struct sockaddr_in serverAddress;
 
-    /* Get the address of the server. */
+    //Se obtiene la direccion del servidor
     bzero(&serverAddress, sizeof(serverAddress));
     serverAddress.sin_family = AF_INET;
     serverAddress.sin_addr.s_addr = inet_addr(host);
     serverAddress.sin_port = htons(port);
 
-    /* Open a socket. */
+    //Se crea el socket
     *clientSocketFD = socket(AF_INET, SOCK_STREAM, 0);
     if (*clientSocketFD < 0)
       fatalError("can't open socket");
 
-    /* Connect to the server. */
+    //Se conecta al servidor
     if (connect(*clientSocketFD, (struct sockaddr *) &serverAddress,
                 sizeof(serverAddress)) < 0)
       fatalError("can't connect to server");
@@ -86,7 +109,7 @@ int initializeClient(int *clientSocketFD,int port,char *host,char *username, cha
     // El cliente manda el nombre de usuario primero
     sayHello(*clientSocketFD,username);
     
-    /* Copy input to the server. */
+    // Procesamiento de los comandos del archivo de entrada
     if (strlen(filename) != 0){
       FILE *input;
       input = fopen(filename,"r");
@@ -129,6 +152,15 @@ int initializeClient(int *clientSocketFD,int port,char *host,char *username, cha
     return 1;
 }
 
+ /**
+  * Manejo de la consola que permite al cliente enviar al servidor los
+  * comandos del chat que desee ejecutar. Este metodo es manejado
+  * mediante el uso de un hilo, razón por la cual su parámetro corresponde
+  * a un apuntador a void.
+  * 
+  * @param args Apuntador al socket del cliente
+  * 
+  */
 void * executeShell(void *args){
   int clientSocketFD = *(int*)(args);
   char *buffer = NULL;
@@ -144,7 +176,6 @@ void * executeShell(void *args){
     lineLength = strlen(buffer);
     buffer[lineLength-1]='\0';
 
-
     if (getCommandFromLine(&newCommand,buffer)!=-1){
 
       if(strcmp("fue",newCommand.command)==0) {
@@ -158,15 +189,12 @@ void * executeShell(void *args){
       while (returno != 0){
         returno = pthread_mutex_trylock(&serverMutex);
       }
+
       sendCommandToSocket(clientSocketFD,newCommand);
       while ((response = readResponseFromServer(clientSocketFD)) == NULL) ;
       pthread_mutex_unlock(&serverMutex);
       printf("*********************************************************\n");
       puts(response);
-      // if (response != NULL) {
-      //   puts(response);
-      //   printf("CARACTER PRUEBA %d\n",response[0]);
-      // }
     }
     else{
       puts("Comando erroneo.");
@@ -178,6 +206,15 @@ void * executeShell(void *args){
   return;
 }
 
+ /**
+  * Programa principal de manejo del cliente. 
+  * Realiza el manejo de los flags colocados al invocar al programa cchat.
+  * Si no se especifica un username, se genera uno aleatorio.
+  * Crea el hilo encargado de la consola para el envio de comandos del chat,
+  * y muestra en la salida estándar los mensajes que se reciben en la(s)
+  * sala(s) de chat a la(s) que está suscrito el cliente.
+  * 
+  */
 int main (int argc, char **argv){
   int index;
   int flag;
@@ -196,10 +233,8 @@ int main (int argc, char **argv){
   printf("Mi usuario es %s\n",username);
 
   // Archivo de entrada. Puede ser vacío
-  //NOTA: creo que podriamos poner filename[] y asi no limitar la extension
   char filename[100] = "";
-
-
+  
   opterr = 0;
 
   while ((flag = getopt (argc, argv, "-h:-p:-n:-a:")) != -1)
@@ -233,13 +268,11 @@ int main (int argc, char **argv){
      }
 
   for (index = optind; index < argc; index++)
-  printf ("No es una opción: %s\n", argv[index]);
+    printf ("No es una opción: %s\n", argv[index]);
 
   int clientSocketFD;
   pthread_t serverThread;
   int getShell = initializeClient(&clientSocketFD,port,host,username,filename);
-
-  
 
   // Se crea un thread que lee comandos por pantalla
   if (getShell) pthread_create(&serverThread,NULL,&executeShell,(void *)(&clientSocketFD));
@@ -248,15 +281,10 @@ int main (int argc, char **argv){
   char *response;
   while(1){
     pthread_mutex_lock(&serverMutex);
-    //puts("Viene el main");
     response = fetchMessagesFromServer(clientSocketFD);
-    //while (1){
     if (pthread_mutex_unlock(&serverMutex) != 0) puts("no pude desbloquear");
-      //else break;
-    //}
     if (response != NULL) {
       printf("Ha recibido un nuevo mensaje:\n");
-      //puts("Soy yo");
       puts(response);
       printf("$>");
     }
