@@ -64,15 +64,22 @@ int addUser(userList *lista,char *nombreUsuario, int clientSocketFD){
     }
     else{
         userBox *actual = lista->head;
+        userBox *previo;
         while (actual != NULL){
             if (strcmp(actual->username,nombreUsuario) == 0) return -1;
-            actual = actual->sig;
+            else{      
+              previo = actual;        
+              actual = actual->sig;
+            }
+            //actual = actual->sig;
         }
 
-        lista->tail->sig = newu;
+        previo->sig = newu;
+        //lista->tail->sig = newu;
         lista->tail = newu;
         // Incremento el tamaño de la lista
         ++lista->size;
+
         return 0;
     }
  
