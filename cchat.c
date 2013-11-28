@@ -117,7 +117,6 @@ int initializeClient(int *clientSocketFD,int port,char *host,char *username, cha
             sendCommandToSocket(*clientSocketFD,newCommand);
             response = readResponseFromServer(*clientSocketFD);
             if (response != NULL) puts(response);
-            else puts("PAJUOOOO");
             printf("*********************************************************\n");
           }
             
@@ -148,7 +147,12 @@ void * executeShell(void *args){
 
     if (getCommandFromLine(&newCommand,buffer)!=-1){
 
-      if(strcmp("fue",newCommand.command)==0) break;
+      if(strcmp("fue",newCommand.command)==0) {
+        sendCommandToSocket(clientSocketFD,newCommand);
+        puts("Hasta luego!");
+        close(clientSocketFD);
+        exit(0);
+      }
 
       int returno = 1;
       while (returno != 0){
@@ -163,6 +167,9 @@ void * executeShell(void *args){
       //   puts(response);
       //   printf("CARACTER PRUEBA %d\n",response[0]);
       // }
+    }
+    else{
+      puts("Comando erroneo.");
     }
       
     free(buffer);
@@ -236,6 +243,7 @@ int main (int argc, char **argv){
 
   // Se crea un thread que lee comandos por pantalla
   if (getShell) pthread_create(&serverThread,NULL,&executeShell,(void *)(&clientSocketFD));
+  else return 0;
 
   char *response;
   while(1){
@@ -247,8 +255,10 @@ int main (int argc, char **argv){
       //else break;
     //}
     if (response != NULL) {
+      printf("Ha recibido un nuevo mensaje:\n");
       //puts("Soy yo");
       puts(response);
+      printf("$>");
     }
   
   }

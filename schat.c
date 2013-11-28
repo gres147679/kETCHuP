@@ -79,14 +79,13 @@ void * serveClient(void *args){
   struct sockaddr_in *clientAddress = (struct sockaddr_in *)(argArray[0]);
   int *newClientSocketFDPointer = (int *)argArray[1];
   int newClientSocketFD = *newClientSocketFDPointer;
-  int userIndex = (int)argArray[2];
 
-  char *username = (char *)argArray[3];
+  char *username = (char *)argArray[2];
 
   //Inicializamos el mutex del usuario
-  userBox *myUser = getItem(globalUserList,userIndex);
-  if (myUser == NULL) fatalError("No puedo obtener el mutex del usuario");
-  else pthread_mutex_init(&myUser->userMutex,NULL);
+  pthread_mutex_t *myMutex = getMutex(globalUserList,username);
+  if (myMutex == NULL) fatalError("No puedo obtener el mutex del usuario");
+  else pthread_mutex_init(myMutex,NULL);
 
 
   // Lista de salas a las que el usuario esta suscrito
@@ -112,9 +111,9 @@ void * serveClient(void *args){
 
   while( read(newClientSocketFD,&heartBeat,4)>0 ){
     commandPacket myCommand;
-    pthread_mutex_lock(&myUser->userMutex);
+    pthread_mutex_lock(myMutex);
     readCommandFromSocket(newClientSocketFD,&myCommand);
-    pthread_mutex_unlock(&myUser->userMutex);
+    pthread_mutex_unlock(myMutex);
     
     strncpy(command,myCommand.command,3);
 
@@ -126,9 +125,9 @@ void * serveClient(void *args){
       response = listChatrooms(&chatRoomsList,newClientSocketFD);
       pthread_mutex_unlock(&chatRoomsListMutex);
 
-      pthread_mutex_lock(&myUser->userMutex);
+      pthread_mutex_lock(myMutex);
       sendResponseToClient(newClientSocketFD,response);
-      pthread_mutex_unlock(&myUser->userMutex);
+      pthread_mutex_unlock(myMutex);
     }
     else if ( strcmp(command,"usu") == 0 ){
     	printf("Mandaste usu\n");
@@ -137,18 +136,18 @@ void * serveClient(void *args){
     	response = listUsers(&globalUserList,newClientSocketFD);
       pthread_mutex_unlock(&globalUserListMutex);
 
-      pthread_mutex_lock(&myUser->userMutex);
+      pthread_mutex_lock(myMutex);
       sendResponseToClient(newClientSocketFD,response);
-      pthread_mutex_unlock(&myUser->userMutex);
+      pthread_mutex_unlock(myMutex);
     }
 
     else if ( strcmp(command,"men") == 0 ){
     	printf("Mandaste men\n");
       sendMessageToChatRooms(&chatRoomsList, username, myCommand.argument);
       
-      pthread_mutex_lock(&myUser->userMutex);
+      pthread_mutex_lock(myMutex);
       sendResponseToClient(newClientSocketFD,"Tu mensaje fue enviado");
-      pthread_mutex_unlock(&myUser->userMutex);
+      pthread_mutex_unlock(myMutex);
       puts("Saliendo de men");
     }
 
@@ -158,25 +157,27 @@ void * serveClient(void *args){
       operationComplete = subscribeUser(&chatRoomsList,myCommand.argument, username,newClientSocketFD);
       pthread_mutex_unlock(&chatRoomsListMutex);
       
-      pthread_mutex_lock(&myUser->userMutex);
+      pthread_mutex_lock(myMutex);
       if(operationComplete == 0) sendResponseToClient(
         newClientSocketFD,"La suscripción se ha realizado con éxito");
       else if (operationComplete == -1) sendResponseToClient(
         newClientSocketFD,"Ya estás suscrito a la sala");
       else sendResponseToClient(
         newClientSocketFD,"La sala no existe. Puedes crearla usando el comando cre");
-      pthread_mutex_unlock(&myUser->userMutex);
+      pthread_mutex_unlock(myMutex);
       printf("El FD sus es %d\n",newClientSocketFD);
     }
 
     else if ( strcmp(command,"des") == 0 ){
       printf("Mandaste des\n");
+      pthread_mutex_lock(&chatRoomsListMutex);
       unsubscribeUser(&chatRoomsList, username,newClientSocketFD);
+      pthread_mutex_unlock(&chatRoomsListMutex);
 
-      pthread_mutex_lock(&myUser->userMutex);
+      pthread_mutex_lock(myMutex);
       sendResponseToClient(
         newClientSocketFD,"Te has desuscrito de todas las salas");
-      pthread_mutex_unlock(&myUser->userMutex);
+      pthread_mutex_unlock(myMutex);
     }
 
     else if ( strcmp(command,"cre") == 0 ){
@@ -186,12 +187,12 @@ void * serveClient(void *args){
       operationComplete = createChatroom(&chatRoomsList,myCommand.argument, username, newClientSocketFD);
       pthread_mutex_unlock(&chatRoomsListMutex);
 
-      pthread_mutex_lock(&myUser->userMutex);
+      pthread_mutex_lock(myMutex);
       if(operationComplete == 0) sendResponseToClient(
         newClientSocketFD,"La sala fue creada exitosamente");
       else sendResponseToClient(
         newClientSocketFD,"Ya existe una sala con ese nombre");
-      pthread_mutex_unlock(&myUser->userMutex);
+      pthread_mutex_unlock(myMutex);
     }
 
     else if ( strcmp(command,"eli") == 0 ){
@@ -200,21 +201,31 @@ void * serveClient(void *args){
       operationComplete = deleteChatroom(&chatRoomsList,myCommand.argument, username);
       pthread_mutex_unlock(&chatRoomsListMutex);
 
-      pthread_mutex_lock(&myUser->userMutex);
+      pthread_mutex_lock(myMutex);
       if(operationComplete == 0) sendResponseToClient(
         newClientSocketFD,"La sala fue eliminada exitosamente");
       else if (operationComplete == -1) sendResponseToClient(
         newClientSocketFD,"No se puede eliminar la sala por defecto");
       else sendResponseToClient(
         newClientSocketFD,"Para eliminar la sala debes ser el dueño");  
-      pthread_mutex_unlock(&myUser->userMutex);
+      pthread_mutex_unlock(myMutex);
     }
 
     else if ( strcmp(command,"fue") == 0 ){
-	printf("Mandaste fue\n");
-    }else{
-	printf("Comando erroneo: ");
-	puts(command);
+      printf("Mandaste fue\n");
+      pthread_mutex_lock(&chatRoomsListMutex);
+      unsubscribeUser(&chatRoomsList, username,newClientSocketFD);
+      pthread_mutex_unlock(&chatRoomsListMutex);
+
+      pthread_mutex_lock(&globalUserListMutex);
+      removeUser(&globalUserList,username);
+      pthread_mutex_unlock(&globalUserListMutex);
+      pthread_exit(NULL);
+    }
+
+    else{
+    	printf("Comando erroneo: ");
+    	puts(command);
     }
   }
   return;
@@ -230,7 +241,7 @@ void waitForConnections(int serverSocketFD){
     
     // Se crea la estructura de argumentos para los threads
     void **argList;
-    argList = (void *) malloc(4*sizeof(int));
+    argList = (void *) malloc(3*sizeof(int));
 
     // Cantidad de clientes
     int userCount = 0;
@@ -244,8 +255,7 @@ void waitForConnections(int serverSocketFD){
         
         argList[0] = &clientAddress;
         argList[1] = &newClientSocketFD;
-        argList[2] = (void *)userCount;
-        argList[3] = (void *)username;
+        argList[2] = (void *)username;
 
         
         pthread_create(&tidList[userCount++],NULL,&serveClient,argList);

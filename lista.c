@@ -95,19 +95,17 @@ void printList(userList lista){
     }
 }
 
-userBox *getItem(userList lista,int index){
-    printf("%d\n",index);
+pthread_mutex_t *getMutex(userList lista,char *username){
     userBox *act;
     act = lista.head;
-    if (index == 0) return act;
+    if (strcmp(username,act->username) == 0) return &act->userMutex;
     else act = act->sig;
 
     int i;
-    for (i = 1; i < index && act != NULL; i++){
-        act = act->sig;
+    while(act != NULL){
+        if (strcmp(act->username,username)==0) return &act->userMutex;
+        else act = act->sig;
     }
-
-    return act;
 }
 
 int isIn(userList list, char *username){

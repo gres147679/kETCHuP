@@ -61,7 +61,7 @@ void removeUser(userList *lista, char *username);
 
 void printList(userList lista);
 
-userBox *getItem(userList lista,int index);
+pthread_mutex_t *getMutex(userList lista,char *username);
 
 int isIn(userList list, char *username);
 
