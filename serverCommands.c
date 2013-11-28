@@ -31,6 +31,8 @@ char *listUsers(userList *globalUserList, int clientSocketFD){
 	if (globalUserList->size == 0) {
 		char *mensaje = "No hay usuarios conectados\n";
 		totalString = (char *) malloc(strlen(mensaje)*sizeof(char)+1);
+                if (totalString==NULL) 
+                    perror("malloc");
 		strcpy(totalString,mensaje);
 		return totalString;
 	}
@@ -49,6 +51,8 @@ char *listUsers(userList *globalUserList, int clientSocketFD){
 	char *mensaje = "La lista de usuarios es:\n";
 	int currentLength = strlen(mensaje);
 	totalString = (char *) malloc((currentLength+totalLength)*sizeof(char));
+        if (totalString==NULL) 
+            perror("malloc");
 	strcpy(totalString,mensaje);
 	
 
@@ -83,6 +87,8 @@ char *listChatrooms(chatRoomList *chatRoomsList, int clientSocketFD){
 	if (chatRoomsList->size == 0) {
 		char *mensaje = "No hay salas creadas\n";
 		totalString = (char *) malloc(strlen(mensaje)*sizeof(char)+1);
+                if (totalString==NULL) 
+                    perror("malloc");
 		strcpy(totalString,mensaje);
 		return totalString;
 	}
@@ -101,6 +107,8 @@ char *listChatrooms(chatRoomList *chatRoomsList, int clientSocketFD){
 	char *mensaje = "La lista de salas es:\n";
 	int currentLength = strlen(mensaje);
 	totalString = (char *) malloc((currentLength+totalLength)*sizeof(char));
+        if (totalString==NULL) 
+            perror("malloc");
 	strcpy(totalString,mensaje);
 
 	// Ahora se itera otra vez, concatenando los strings

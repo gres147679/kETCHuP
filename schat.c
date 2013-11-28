@@ -264,6 +264,8 @@ void waitForConnections(int serverSocketFD){
     // Se crea la estructura de argumentos para los threads
     void **argList;
     argList = (void *) malloc(3*sizeof(int));
+    if (argList==NULL) 
+        perror("malloc");
 
     // Cantidad de clientes
     int userCount = 0;

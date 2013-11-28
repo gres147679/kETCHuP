@@ -50,6 +50,8 @@ int receiveHello(int socketFD, char **username){
   // Si el parametro no es vacio, el servidor lee y responde
   if (argLength != 1){
     *username = (char *) malloc(argLength*sizeof(char)+1);
+    if (*username==NULL) 
+        perror("malloc");
     n = read(socketFD,*username,argLength);    
     write(socketFD,&response,4);
   }
@@ -144,6 +146,8 @@ int readCommandFromSocket(int socketFD, commandPacket *receivedCommand){
   // Si el parametro no es vacio, el servidor lee y responde
   if (argLength != 1){
     receivedCommand->argument = (char *) malloc(argLength*sizeof(char)+1);
+    if (receivedCommand->argument==NULL) 
+        perror("malloc");
     n = read(socketFD,receivedCommand->argument,argLength);    
     write(socketFD,&response,4);
   }
@@ -248,6 +252,8 @@ char *readResponseFromServer(int socketFD){
     // Si la respuesta no es vacio, el cliente lee y responde
     if (answerLength != 0){
       answer = (char *) malloc(answerLength*sizeof(char));
+      if (answer==NULL) 
+          perror("malloc");
       n = read(socketFD,answer,answerLength);    
       write(socketFD,&allGood,4);
     }
@@ -329,6 +335,8 @@ char *fetchMessagesFromServer(int socketFD){
     // Si la respuesta no es vacio, el cliente lee y responde
     if (answerLength != 0){
       answer = (char *) malloc(answerLength*sizeof(char));
+      if (answer==NULL) 
+          perror("malloc");
       n = read(socketFD,answer,answerLength);    
     }
     return answer;

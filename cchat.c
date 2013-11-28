@@ -51,6 +51,8 @@ int getCommandFromLine(commandPacket *newCommand,char *line){
     	|| !strcmp(line,"eli") ){    
   	    strncpy(newCommand->command,line,3);
   	    newCommand->argument = (char *) malloc ((lineLength-4)*sizeof(char));
+            if (newCommand->argument==NULL) 
+                perror("malloc");
   	    strncpy(newCommand->argument,line+4,lineLength-4);	    
   	    return 0;
       }
@@ -65,6 +67,8 @@ int getCommandFromLine(commandPacket *newCommand,char *line){
  	|| !strcmp(line,"fue") ){
     	strncpy(newCommand->command,line, 3);    
     	newCommand->argument = (char *) malloc (sizeof(char));
+        if (newCommand->argument==NULL) 
+            perror("malloc");
     	newCommand->argument[0]='\0';
     	return 0;
     } 
