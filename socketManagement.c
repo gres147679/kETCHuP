@@ -1,15 +1,13 @@
-/****************************
- socketManagement.c
-
- Módulo con operaciones sobre
- los sockets, para escribir
- y leer datos
- 
- Andrea Balbás        09-10076
- Gustavo El Khoury    10-10226     
- 
- Septiembre - Diciembre 2013
- ****************************/
+/**
+ * socketManagement.c
+ *
+ * Septiembre - Diciembre 2013
+ *
+ * Funciones de lectura y escritura en sockets
+ *
+ * @author Andrea Balbás        09-10076
+ * @author Gustavo El Khoury    10-10226
+ */
 
 #include <stdio.h>
 #include <unistd.h>
@@ -19,31 +17,15 @@
 #include "socketManagement.h"
 #include "errors.h"
 
-void copyDataToFD(int from, int to) {
-  char buffer[1024];
-  int amount;
-
-  while ((amount = read(from, buffer, sizeof(buffer))) > 0){
-    if (write(to, buffer, amount) != amount) {
-      fatalError("Falló la escritura al socket");
-      return;
-    }
-  }
-  
-  if (amount < 0) fatalError("Falló la escritura al socket");
-
-}
-
-void copyDataToArray(int from, char *to) {
-  int amount;
-  while ((amount = read(from, to, 170*sizeof(char))) > 0);
-  return;
-
-}
-
-// Procedimientos para que el cliente le mande el nombre de usuario
-// al servidor
-
+ /**
+  * Protocolo de comunicación para que el servidor reciba del cliente
+  * su nombre de usuario
+  * 
+  * @param socketFD Socket del cliente cuyo nombre de usuario se recibirá.
+  * @param username Nombre de usuario del cliente.
+  * @return 0 si se recibió correctamente el nombre de usuario.
+  * 
+  */
 int receiveHello(int socketFD, char **username){
   int nBytesRead = 0;
   int n = 1;
@@ -75,6 +57,15 @@ int receiveHello(int socketFD, char **username){
   return 0;
 }
 
+ /**
+  * Protocolo de comunicación para que el cliente le envíe al servidor su 
+  * nombre de usuario
+  * 
+  * @param socketFD Socket del servidor.
+  * @param username Nombre de usuario del cliente.
+  * @return 0 si se envió correctamente el nombre de usuario.
+  * 
+  */
 int sayHello(int socketFD, char *username){  
   int serverResponse = 0;
   int argLength = strlen(username)+1;
@@ -107,16 +98,25 @@ int sayHello(int socketFD, char *username){
   return 0;
 }
 
-// Implementa nuestro protocolo de comunicacion para mandar comandos, 
-// que sigue estos pasos:
-// -)El cliente se conecta y envia el comando
-// -)El servidor lee el comando, y le avisa al cliente
-// -)El cliente envia la longitud del parametro que sigue
-// -)El servidor recibe la señal, y le responde al cliente
-// -)El cliente envia el parametro
+/** Las siguiente dos funciones corresponden al protocolo de comunicación
+ * destinado a que el cliente envíe comandos al servidor y éste los reciba.
+ * Los pasos del protocolo son los siguientes:
+ *   El cliente se conecta y envía el comando
+ *   El servidor lee el comando, y le avisa al cliente
+ *   El cliente envía la longitud del parámetro que sigue
+ *   El servidor recibe la señal, y le responde al cliente
+ *   El cliente envía el parámetro.
+ */
 
+/**
+  * Protocolo de comunicación para que el servidor reciba comandos del cliente.
+  *
+  * @param socketFD Socket del cliente que envía el comando.
+  * @param receivedCommand Comando que se recbió del cliente.
+  * @return 0 si se recibió correctamente el comando.
+  * 
+  */
 int readCommandFromSocket(int socketFD, commandPacket *receivedCommand){
-  //puts("LEYENDO COMANDO");
   int nBytesRead = 0;
   int n = 1;
   char command[4];
@@ -124,13 +124,10 @@ int readCommandFromSocket(int socketFD, commandPacket *receivedCommand){
   int response = 0;
 
   // El servidor lee el hola
-  //n = read(socketFD,&argLength,4);
-  //if (n!=4) fatalError("Server protocol error 0");  
 
   // El cliente manda el comando, y el servidor lo lee
   n = read(socketFD,&receivedCommand->command,4);
   if (n!=4) {
-    //printf("%d\n",n);
     fatalError("Server protocol error 1");
   }
 
@@ -140,7 +137,6 @@ int readCommandFromSocket(int socketFD, commandPacket *receivedCommand){
   // El servidor lee la longitud
   n = read(socketFD,&argLength,4);
   if (n!=4) fatalError("Server protocol error 3");  
-  //printf("La longitud es %d\n",argLength);
 
   // El servidor responde, para que el cliente mande el parametro
   if (write(socketFD,&response,4) == -1) fatalError("Server protocol error 4");
@@ -155,8 +151,15 @@ int readCommandFromSocket(int socketFD, commandPacket *receivedCommand){
   return 0;
 }
 
+ /**
+  * Protocolo de comunicación para que el cliente envíe comandos al servidor.
+  * 
+  * @param socketFD Socket del cliente que envía el comando.
+  * @param newCommand Comando que se envía al servidor.
+  * @return 0 si se envió correctamente el nombre de usuario.
+  * 
+  */
 int sendCommandToSocket(int socketFD, commandPacket newCommand){
-  //puts("MANDANDO COMANDO");
   int serverResponse = 0;
   int argLength = strlen(newCommand.argument)+1;
   int n = 0;
@@ -171,13 +174,11 @@ int sendCommandToSocket(int socketFD, commandPacket newCommand){
   // la longitud del parametro
   n = read(socketFD,&serverResponse,4);
   if (n!=4 || serverResponse != 0) {
-      //printf("%d %d\n",n,serverResponse);
       fatalError("Client protocol error 2");
   }
 
   // El cliente manda la longitud del parametro
   if (write(socketFD,&argLength,4) == -1) fatalError("Client protocol error 3");
-  //printf("La longitud es %d\n",argLength);
 
   // El cliente espera la respuesta del servidor, para mandar el parametro
   n = read(socketFD,&serverResponse,4);
@@ -190,19 +191,27 @@ int sendCommandToSocket(int socketFD, commandPacket newCommand){
     if (n!=4 || serverResponse != 0) fatalError("Client protocol error 6");
   }
   
-  //puts("YA NO MANDANDO COMANDO");
   return 0;
 }
 
+/** Las siguiente dos funciones corresponden al protocolo de comunicación
+ * destinado a que el cliente reciba las respuestas enviadas por el servidor.
+ * Los pasos del protocolo son:
+ *    El servidor envíia la longitud del string de respuesa, y el cliente acepta
+ *    El servidor recibe la señal, y envia el string. El cliente confirma que
+ *    recibió la respuesta. 
+ */
 
-// Implementa nuestro protocolo de comunicacion para que el servidor envie
-// la respuesta a los comandos, que sigue estos pasos:
-// -)El servidor envia la longitud del string de respuesa, y el cliente acepta
-// -)El servidor recibe la señal, y envia el string. El cliente confirma que
-// recibio la respuesta
-
+ /**
+  * Protocolo de comunicación para que el cliente lea la respuesta enviada
+  * por el servidor.
+  * 
+  * @param socketFD Socket del cliente que recibirá la respuesta.
+  * @return String con la respuesta enviada por el cliente.
+  *         NULL en caso de que no haya respuesta.
+  * 
+  */
 char *readResponseFromServer(int socketFD){
-  //puts("LEYENDO RESPUESTA");
 
   int n = 1;
   int answerLength;
@@ -213,10 +222,11 @@ char *readResponseFromServer(int socketFD){
   struct timeval timeout;
   int rc, result;
 
-    /* Set time limit. */
+  //Se determina el tiempo del timeout
   timeout.tv_sec = 1;
   timeout.tv_usec = 0;
-    /* Create a descriptor set containing our two sockets.  */
+  
+  //Crea el file descriptor con el socket del cliente
   FD_ZERO(&fdSet);
   FD_SET(socketFD, &fdSet);
   rc = select(sizeof(fdSet)*4, &fdSet, NULL, NULL, &timeout);
@@ -227,20 +237,13 @@ char *readResponseFromServer(int socketFD){
 
   result = 0;
   if (rc >0 && FD_ISSET(socketFD, &fdSet)){
-    //puts("LEYENDO RESPUESTA");
     // El cliente lee la longitud
     n = read(socketFD,&answerLength,4);
     if (n!=4) fatalError("Response reading error 1");  
-    //puts("wbeo");
-    //printf("%d\n",answerLength);
-    //printf("La longitud es %d\n",answerLength);
 
     int b;
     // El cliente responde, para que el servidor mande el parametro
     if ((b=write(socketFD,&allGood,4)) == -1) fatalError("Response reading error 2");
-
-    //puts("wbeo2");
-    //printf("%d\n",b);
 
     // Si la respuesta no es vacio, el cliente lee y responde
     if (answerLength != 0){
@@ -250,14 +253,20 @@ char *readResponseFromServer(int socketFD){
     }
     return answer;
   }
-  else return NULL;
-  
+  else return NULL; 
   
 }
 
+ /**
+  * Protocolo de comunicación para que el servidor envíe una respuesta
+  * a un cliente.
+  * 
+  * @param socketFD Socket del cliente al que se le envía la respuesta.
+  * @param answer Respuesta que se le envía al cliente.
+  * @return 0 si se envió correctamente la respuesta.
+  * 
+  */
 int sendResponseToClient(int socketFD, char *answer){
-  //puts("Mando respuesta OJO");
-  //puts("El cliente empieza");  
     
   int serverResponse = 0;
   int answerLength = strlen(answer)+1;
@@ -265,31 +274,30 @@ int sendResponseToClient(int socketFD, char *answer){
 
   // El servidor manda la longitud de la respuesta
   if (write(socketFD,&answerLength,4) == -1) fatalError("Response sending error 1");
-  //printf("La longitud es %d\n",answerLength);
-  //puts("Mando respuesta OJO2");
-  //printf("%d\n",answerLength);
 
   // El servidor espera la respuesta del cliente, para mandar la respuesta
   n = read(socketFD,&serverResponse,4);
   if (n!=4 || serverResponse != 0) fatalError("Response sending error 2");
-  //puts("Mando respuesta OJO3");
 
   if (answerLength != 1){
     if ( (n=write(socketFD,answer,answerLength)) == -1) fatalError("Response sending error 3");
-    //printf("Se han mandado %d\n",n);
     // El cliente recibe respuesta final del servidor
     n = read(socketFD,&serverResponse,4);
     if (n!=4 || serverResponse != 0) fatalError("Response sending error 4");
   }
   
-  //puts("El cliente termino");
   return 0;
 }
 
-// Envio y recepcion de mensajes
-
+ /**
+  * Protocolo de comunicación para que el cliente reciba los mensajes
+  * de las salas a las que está suscrito.
+  * 
+  * @param socketFD Socket que se leerá para obtener el mensaje recibido.
+  * @return String con el mensaje recibido.
+  * 
+  */
 char *fetchMessagesFromServer(int socketFD){
-  //puts("LEYENDO RESPUESTA");
 
   int n = 1;
   int answerLength;
@@ -300,10 +308,10 @@ char *fetchMessagesFromServer(int socketFD){
   struct timeval timeout;
   int rc, result;
 
-    /* Set time limit. */
+  //Se determina el tiempo del timeout
   timeout.tv_sec = 1;
   timeout.tv_usec = 0;
-    /* Create a descriptor set containing our two sockets.  */
+  //Crea el file descriptor con el socket del cliente
   FD_ZERO(&fdSet);
   FD_SET(socketFD, &fdSet);
   rc = select(sizeof(fdSet)*4, &fdSet, NULL, NULL, &timeout);
@@ -314,13 +322,9 @@ char *fetchMessagesFromServer(int socketFD){
 
   result = 0;
   if (rc >0 && FD_ISSET(socketFD, &fdSet)){
-    //puts("LEYENDO RESPUESTA");
     // El cliente lee la longitud
     n = read(socketFD,&answerLength,4);
     if (n!=4) fatalError("Response reading error 1");  
-    //puts("wbeo");
-    //printf("%d\n",answerLength);
-    //printf("La longitud es %d\n",answerLength);
 
     // Si la respuesta no es vacio, el cliente lee y responde
     if (answerLength != 0){
@@ -330,10 +334,18 @@ char *fetchMessagesFromServer(int socketFD){
     return answer;
   }
   else return NULL;
-  
-  
+
 }
 
+ /**
+  * Protocolo de comunicación para que el servidor envíe un mensaje
+  * a un cliente.
+  * 
+  * @param socketFD Socket del cliente al que se enviará el mensaje.
+  * @param answer Mensaje que se enviará al cliente.
+  * @return 0 si el mensaje fue enviado correctamente.
+  * 
+  */
 int sendMessagesToClient(int socketFD, char *answer){
   int serverResponse = 0;
   int answerLength = strlen(answer)+1;
@@ -341,16 +353,10 @@ int sendMessagesToClient(int socketFD, char *answer){
 
   // El servidor manda la longitud de la respuesta
   if (write(socketFD,&answerLength,4) == -1) fatalError("Response sending error 1");
-  //printf("La longitud es %d\n",answerLength);
-  //puts("Mando respuesta OJO2");
-  //printf("%d\n",answerLength);
 
   if (answerLength != 1){
     if ( (n=write(socketFD,answer,answerLength)) == -1) fatalError("Response sending error 3");
-    //printf("Se han mandado %d\n",n);
-    // El cliente recibe respuesta final del servidor
   }
   
-  //puts("El cliente termino");
   return 0;
 }

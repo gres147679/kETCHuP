@@ -1,11 +1,14 @@
-/****************************
- schat.c
- 
- Andrea Balbás        09-10076
- Gustavo El Khoury    10-10226     
- 
- Septiembre - Diciembre 2013
- ****************************/
+/**
+ * schat.c
+ *
+ * Septiembre - Diciembre 2013
+ *
+ * Manejo del servidor que maneja las solicitudes
+ * de los clientes conectados al chat
+ *
+ * @author Andrea Balbás        09-10076
+ * @author Gustavo El Khoury    10-10226
+ */
 #include <ctype.h>
 #include <unistd.h>
 #include <stdio.h>
@@ -42,6 +45,16 @@ pthread_mutex_t chatRoomsListMutex = PTHREAD_MUTEX_INITIALIZER;
 // Arreglo de TIDs. Debe ser UNA LISTA
 pthread_t tidList[512];
 
+ /**
+  * Crea la sala de chat a la que por defecto se van a conectar los usuarios.
+  * Abre el socket y lo asocia al socket.
+  * 
+  * @param serverPort Numero de puerto al que se asociará el socket.
+  * @param serverQueueLength Longitud de la cola del servidor.
+  * @param defaultChatName Nombre de la sala por defecto.
+  * @return Entero correspondiente al file descriptor del socket del servidor.
+  * 
+  */
 int initializeServer(int serverPort,int serverQueueLength, char *defaultChatName){
   int serverSocketFD, newClientSocketFD;  
   struct sockaddr_in serverAddress;
@@ -61,7 +74,6 @@ int initializeServer(int serverPort,int serverQueueLength, char *defaultChatName
   /*Asociar el socket a una direccion*/
   bzero(&serverAddress, sizeof(serverAddress));
   serverAddress.sin_family = PF_INET;
-  //serverAddress.sin_addr.s_addr = inet_addr("127.0.0.1");
   serverAddress.sin_addr.s_addr = htonl(INADDR_ANY);
   serverAddress.sin_port = htons(serverPort);
   if (bind(serverSocketFD, (struct sockaddr *) &serverAddress,
@@ -73,6 +85,19 @@ int initializeServer(int serverPort,int serverQueueLength, char *defaultChatName
   return serverSocketFD;
 }
 
+ /**
+  * Manejo de las peticiones de los clientes conectados al chat.
+  * Inicializa el mutex del usuario al que atenderá.
+  * Verifica que el cliente esté listo para enviar solicitudes y lo agrega
+  * a la sala por defecto.
+  * Lee del socket los comandos enviados por el cliente y los ejecuta.
+  * 
+  * @param args Parámetros que necesita el servidor para atender al cliente.
+  *             args[0] -> Direccion del cliente.
+  *             args[1] -> Apuntador al file descriptor del socket del cliente.
+  *             args[2] -> Nombre del usuario que se va a atender.
+  * 
+  */
 void * serveClient(void *args){
   // Argumentos
   void **argArray = (void **) args;
@@ -86,14 +111,6 @@ void * serveClient(void *args){
   pthread_mutex_t *myMutex = getMutex(globalUserList,username);
   if (myMutex == NULL) fatalError("No puedo obtener el mutex del usuario");
   else pthread_mutex_init(myMutex,NULL);
-
-
-  // Lista de salas a las que el usuario esta suscrito
-  // char **currentChats;
-  // int chats = 1;
-  // currentChats = (char **) malloc(10*sizeof(char*));
-  // currentChats[0] = (char *) malloc(7*sizeof(char));
-  // currentChats[0] = "actual";
   
   char buffer[170];
   char command[4];
@@ -104,7 +121,6 @@ void * serveClient(void *args){
   char *response;
 
   // Se agrega el usuario a la sala por defecto
-
   pthread_mutex_lock(&chatRoomsListMutex);
   addUserToCRList(&chatRoomsList,"actual", username, newClientSocketFD);
   pthread_mutex_unlock(&chatRoomsListMutex);
@@ -116,7 +132,6 @@ void * serveClient(void *args){
     pthread_mutex_unlock(myMutex);
     
     strncpy(command,myCommand.command,3);
-
 
     // Definición de los comandos
     if ( strcmp(command,"sal") == 0 ){
@@ -181,7 +196,6 @@ void * serveClient(void *args){
 
     else if ( strcmp(command,"cre") == 0 ){
     	printf("Mandaste cre con argumento %s\n",myCommand.argument);
-    	//Llamada a implementación de cre
       pthread_mutex_lock(&chatRoomsListMutex);
       operationComplete = createChatroom(&chatRoomsList,myCommand.argument, username, newClientSocketFD);
       pthread_mutex_unlock(&chatRoomsListMutex);
@@ -230,6 +244,15 @@ void * serveClient(void *args){
   return;
 }
 
+ /**
+  * Metodo del servidor que espera a que lleguen nuevas conexiones al chat.
+  * Inicializa la estructura de datos que se utilizará para atender las 
+  * peticiones del cliente.
+  * Crea el hilo que se dedicará a atender las peticiones del cliente.
+  * 
+  * @param serverSocketFD Socket del servidor.
+  * 
+  */
 void waitForConnections(int serverSocketFD){
   struct sockaddr_in clientAddress;
   int clientAddresslength;
@@ -259,12 +282,18 @@ void waitForConnections(int serverSocketFD){
         
         pthread_create(&tidList[userCount++],NULL,&serveClient,argList);
         
-        //serveClient(argList);
         printf("...Done\n");
-        //close(newClientSocketFD);
     }
 }
 
+ /**
+  * Programa principal de manejo del servidor.
+  * Maneja los argumentos recibidos en el momento en que se ejecutó el programa
+  * del servidor, es decir, el puerto y el nombre de la sala por defecto.
+  * Inicializa la lista de usuarios, inicializa el servidor, y espera a 
+  * que lleguen nuevas conexiones.
+  * 
+  */
 main(int argc, char *argv[]){
 
   int index;
