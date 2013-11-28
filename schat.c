@@ -165,7 +165,6 @@ void * serveClient(void *args){
       else sendResponseToClient(
         newClientSocketFD,"La sala no existe. Puedes crearla usando el comando cre");
       pthread_mutex_unlock(myMutex);
-      printf("El FD sus es %d\n",newClientSocketFD);
     }
 
     else if ( strcmp(command,"des") == 0 ){
