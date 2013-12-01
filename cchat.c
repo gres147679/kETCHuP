@@ -292,7 +292,7 @@ int main (int argc, char **argv){
       puts(response);
       printf("$>");
     }
-  
+    sleep(1);
   }
 
 }
