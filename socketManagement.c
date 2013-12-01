@@ -125,7 +125,8 @@ int readCommandFromSocket(int socketFD, commandPacket *receivedCommand){
   int argLength;
   int response = 0;
 
-  // El servidor lee el hola
+  // Una vez el Main recibe el hola, el servidor responde
+  if (write(socketFD,&response,4) == -1) fatalError("Server protocol error 0");
 
   // El cliente manda el comando, y el servidor lo lee
   n = read(socketFD,&receivedCommand->command,4);
@@ -170,6 +171,12 @@ int sendCommandToSocket(int socketFD, commandPacket newCommand){
 
   // El cliente dice hola
   if (write(socketFD,&serverResponse,4) == -1) fatalError("Client protocol error 0");
+
+  // El cliente espera la respuesta del servidor para mandar el comando
+  n = read(socketFD,&serverResponse,4);
+  if (n!=4 || serverResponse != 0) {
+      fatalError("Client protocol error 2");
+  }
   
   // El cliente escribe el comando
   if (n=write(socketFD,newCommand.command,4) == -1) fatalError("Client protocol error 1");
