@@ -334,7 +334,7 @@ main(int argc, char *argv[]){
    printf ("No es una opción: %s\n", argv[index]);
   
   initialize(&globalUserList);
-  int serverSocketFD = initializeServer(PORT,QUEUELENGTH,chatRoom);
+  int serverSocketFD = initializeServer(port,QUEUELENGTH,chatRoom);
 
   waitForConnections(serverSocketFD);
   return 0;
