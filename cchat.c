@@ -234,7 +234,6 @@ int main (int argc, char **argv){
   char rand[5];
   snprintf(rand, 5, "%d", randNum);
   strcat(username,rand);
-  printf("Mi usuario es %s\n",username);
 
   // Archivo de entrada. Puede ser vacío
   char filename[100] = "";
