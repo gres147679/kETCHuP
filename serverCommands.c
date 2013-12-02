@@ -49,7 +49,7 @@ char *listUsers(userList *globalUserList, int clientSocketFD){
 	}
 
 	char *mensaje = "La lista de usuarios es:\n";
-	int currentLength = strlen(mensaje);
+	int currentLength = strlen(mensaje)+1;
 	totalString = (char *) malloc((currentLength+totalLength)*sizeof(char));
         if (totalString==NULL) 
             perror("malloc");
